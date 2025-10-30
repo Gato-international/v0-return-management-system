@@ -29,7 +29,16 @@ const productSchema = z.object({
     .pipe(z.number().min(0, "Price cannot be negative").optional()), // Then pipe to optional number validation
 })
 
+// This is the type of the data *after* Zod has processed it
 type ProductFormData = z.infer<typeof productSchema>
+
+// This is the type of the data *before* Zod has processed it, as expected by useForm for inputs
+type ProductFormInput = {
+  name: string;
+  sku: string;
+  description?: string;
+  price?: string; // Price is a string when coming directly from the input field
+};
 
 interface ProductFormProps {
   initialData?: {
@@ -52,13 +61,13 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormData>({
+  } = useForm<ProductFormInput>({ // Use ProductFormInput here
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || "",
       sku: initialData?.sku || "",
       description: initialData?.description || "",
-      price: initialData?.price ?? undefined,
+      price: initialData?.price?.toString() || "", // Ensure price is a string for the input field
     },
   })
 
@@ -68,28 +77,38 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         name: initialData.name,
         sku: initialData.sku,
         description: initialData.description || "",
-        price: initialData.price ?? undefined,
+        price: initialData.price?.toString() || "", // Ensure price is a string for the input field
       })
     } else {
       reset({
         name: "",
         sku: "",
         description: "",
-        price: undefined,
+        price: "", // Default to empty string for new product form
       })
     }
   }, [initialData, reset])
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (data: ProductFormInput) => { // data here is ProductFormInput
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
+    // Zod will transform `data` to `ProductFormData` during validation
+    // We need to ensure the formData sent to actions matches the schema's output type
+    const validatedData = productSchema.safeParse(data);
+
+    if (!validatedData.success) {
+      setError(validatedData.error.errors.map(e => e.message).join(", "));
+      setIsLoading(false);
+      return;
+    }
+
     const formData = new FormData()
-    formData.append("name", data.name)
-    formData.append("sku", data.sku)
-    if (data.description) formData.append("description", data.description)
-    if (data.price !== undefined && data.price !== null) formData.append("price", data.price.toString())
+    formData.append("name", validatedData.data.name)
+    formData.append("sku", validatedData.data.sku)
+    if (validatedData.data.description) formData.append("description", validatedData.data.description)
+    if (validatedData.data.price !== undefined && validatedData.data.price !== null) formData.append("price", validatedData.data.price.toString())
 
     try {
       let result
@@ -108,7 +127,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
             name: "",
             sku: "",
             description: "",
-            price: undefined,
+            price: "",
           })
         }
         onSuccess?.()
