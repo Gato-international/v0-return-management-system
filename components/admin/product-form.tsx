@@ -18,8 +18,8 @@ const productSchema = z.object({
   sku: z.string().min(1, "SKU is required").regex(/^[A-Z0-9-]+$/, "SKU can only contain uppercase letters, numbers, and hyphens"),
   description: z.string().optional(),
   price: z.preprocess(
-    // Refined preprocess to handle empty string, null, undefined, and non-numeric values
-    (val) => {
+    // Explicitly define the return type of the preprocess function
+    (val): number | undefined => {
       if (val === "" || val === null || val === undefined) return undefined;
       const num = Number(val);
       return isNaN(num) ? undefined : num;
@@ -57,8 +57,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       name: initialData?.name || "",
       sku: initialData?.sku || "",
       description: initialData?.description || "",
-      // Use nullish coalescing (??) to ensure undefined if initialData.price is null/undefined
-      // This aligns better with z.optional() which accepts undefined, not null.
       price: initialData?.price ?? undefined,
     },
   })
@@ -69,14 +67,14 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         name: initialData.name,
         sku: initialData.sku,
         description: initialData.description || "",
-        price: initialData.price ?? undefined, // Align with defaultValues logic
+        price: initialData.price ?? undefined,
       })
     } else {
       reset({
         name: "",
         sku: "",
         description: "",
-        price: undefined, // Align with optional price
+        price: undefined,
       })
     }
   }, [initialData, reset])
@@ -90,7 +88,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     formData.append("name", data.name)
     formData.append("sku", data.sku)
     if (data.description) formData.append("description", data.description)
-    // Only append price if it's a number (not undefined or null)
     if (data.price !== undefined && data.price !== null) formData.append("price", data.price.toString())
 
     try {
@@ -110,8 +107,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
             name: "",
             sku: "",
             description: "",
-            price: undefined, // Reset to undefined for optional price
-          }) // Clear form for new product creation
+            price: undefined,
+          })
         }
         onSuccess?.()
       }
