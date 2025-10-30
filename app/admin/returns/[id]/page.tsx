@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { format } from "date-fns"
 import { ReturnActions } from "@/components/admin/return-actions"
+import { DeleteReturnButton } from "@/components/admin/delete-return-button"
+import { PrintReturnButton } from "@/components/admin/print-return-button"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -62,7 +64,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin/returns">
@@ -85,10 +87,10 @@ export default async function ReturnDetailPage({ params }: PageProps) {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 lg:grid-cols-3">
+      <main className="container mx-auto px-4 py-8 print:p-0">
+        <div className="grid gap-6 lg:grid-cols-3 print:grid-cols-1">
           {/* Left Column - Details */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 print:col-span-1">
             {/* Status Overview */}
             <Card>
               <CardHeader>
@@ -225,9 +227,20 @@ export default async function ReturnDetailPage({ params }: PageProps) {
           </div>
 
           {/* Right Column - Actions & History */}
-          <div className="space-y-6">
+          <div className="space-y-6 print:hidden">
             {/* Actions */}
             <ReturnActions returnId={returnData.id} currentStatus={returnData.status} userId={user.id} />
+
+            {/* More Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>More Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <PrintReturnButton />
+                <DeleteReturnButton returnId={returnData.id} userId={user.id} />
+              </CardContent>
+            </Card>
 
             {/* Status History */}
             <Card>

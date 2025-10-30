@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { sendStatusUpdateEmail } from "@/lib/utils/email"
+import { redirect } from "next/navigation"
 
 export async function updateReturnStatusAction(returnId: string, newStatus: string, notes: string, userId: string) {
   try {
@@ -86,4 +87,32 @@ export async function addInternalNoteAction(returnId: string, content: string, u
     console.error("[v0] Error adding note:", error)
     return { error: "Failed to add note" }
   }
+}
+
+export async function deleteReturnAction(returnId: string, userId: string) {
+  try {
+    const supabase = createAdminClient()
+
+    // Log the action first
+    await supabase.from("audit_logs").insert({
+      return_id: returnId,
+      action: "DELETE_RETURN",
+      details: { message: "Return request deleted by admin" },
+      user_id: userId,
+    })
+
+    // Delete the return (cascading deletes will handle related data)
+    const { error } = await supabase.from("returns").delete().eq("id", returnId)
+
+    if (error) throw error
+
+    revalidatePath("/admin/returns")
+    revalidatePath("/admin/dashboard")
+  } catch (error) {
+    console.error("[v0] Error deleting return:", error)
+    return { error: "Failed to delete return request" }
+  }
+
+  // Redirect to the returns list after successful deletion
+  redirect("/admin/returns")
 }
