@@ -87,6 +87,17 @@ async function setupDatabase() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      -- NEW: Create products table
+      CREATE TABLE IF NOT EXISTS products (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        sku TEXT UNIQUE NOT NULL,
+        description TEXT,
+        price NUMERIC(10, 2),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
       -- Create indexes for better query performance
       CREATE INDEX IF NOT EXISTS idx_returns_return_number ON returns(return_number);
       CREATE INDEX IF NOT EXISTS idx_returns_customer_email ON returns(customer_email);
@@ -97,6 +108,7 @@ async function setupDatabase() {
       CREATE INDEX IF NOT EXISTS idx_return_images_return_id ON return_images(return_id);
       CREATE INDEX IF NOT EXISTS idx_return_notes_return_id ON return_notes(return_id);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_return_id ON audit_logs(return_id);
+      CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
     `
 
     console.log("[v0] Creating tables...")
