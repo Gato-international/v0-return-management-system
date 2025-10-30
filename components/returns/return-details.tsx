@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Package, Calendar, Mail, FileText } from "lucide-react"
 import { format } from "date-fns"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface ReturnDetailsProps {
   returnData: any
@@ -47,7 +48,7 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Return #{returnData.return_number}</CardTitle>
+              <CardTitle>Return #{formatReturnNumber(returnData.return_number)}</CardTitle>
               <CardDescription>Order: {returnData.order_number || "N/A"}</CardDescription>
             </div>
             <Badge className={statusColors[returnData.status] || "bg-gray-500"}>

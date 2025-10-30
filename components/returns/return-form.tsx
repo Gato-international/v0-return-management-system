@@ -15,6 +15,7 @@ import { CheckCircle, AlertCircle, Plus, X } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { ImageUpload } from "@/components/returns/image-upload"
 import { Textarea } from "../ui/textarea"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 // Define Product type for availableProducts prop
 interface Product {

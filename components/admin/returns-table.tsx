@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, Search } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface Return {
   id: string
-  return_number: string
+  return_number: number // Changed to number
   customer_email: string
   customer_name: string
   order_number: string
@@ -55,11 +56,14 @@ export function ReturnsTable({ returns }: ReturnsTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   const filteredReturns = returns.filter((returnItem) => {
+    const formattedReturnNum = formatReturnNumber(returnItem.return_number).toLowerCase();
+    const lowerCaseSearchTerm = searchTerm.toLowerCase()
+
     const matchesSearch =
-      (returnItem.return_number?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (returnItem.customer_email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (returnItem.order_number?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (returnItem.customer_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      formattedReturnNum.includes(lowerCaseSearchTerm) ||
+      (returnItem.customer_email?.toLowerCase() || "").includes(lowerCaseSearchTerm) ||
+      (returnItem.order_number?.toLowerCase() || "").includes(lowerCaseSearchTerm) ||
+      (returnItem.customer_name?.toLowerCase() || "").includes(lowerCaseSearchTerm)
 
     const matchesStatus = statusFilter === "all" || returnItem.status === statusFilter
 
@@ -121,7 +125,7 @@ export function ReturnsTable({ returns }: ReturnsTableProps) {
             ) : (
               filteredReturns.map((returnItem) => (
                 <TableRow key={returnItem.id}>
-                  <TableCell className="font-medium">{returnItem.return_number}</TableCell>
+                  <TableCell className="font-medium">{formatReturnNumber(returnItem.return_number)}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{returnItem.customer_name}</div>

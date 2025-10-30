@@ -12,6 +12,7 @@ import { format } from "date-fns"
 import { ReturnActions } from "@/components/admin/return-actions"
 import { DeleteReturnButton } from "@/components/admin/delete-return-button"
 import { PrintReturnButton } from "@/components/admin/print-return-button"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -74,7 +75,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Return #{returnData.return_number}</h1>
+              <h1 className="text-2xl font-bold">Return #{formatReturnNumber(returnData.return_number)}</h1>
               <p className="text-sm text-muted-foreground">Order: {returnData.order_number || "N/A"}</p>
             </div>
           </div>

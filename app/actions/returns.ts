@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface ReturnItem {
   productId: string
@@ -106,12 +107,13 @@ export async function submitReturnAction(data: SubmitReturnData) {
       }
     }
 
-    // Use the auto-generated return_number from the database
-    await sendReturnConfirmationEmail(data.customerEmail, String(returnRecord.return_number), data.orderNumber || "N/A")
+    // Use the auto-generated return_number from the database and format it
+    const formattedReturnNumber = formatReturnNumber(returnRecord.return_number);
+    await sendReturnConfirmationEmail(data.customerEmail, formattedReturnNumber, data.orderNumber || "N/A")
 
     revalidatePath("/admin/dashboard")
 
-    return { success: true, returnNumber: returnRecord.return_number }
+    return { success: true, returnNumber: formattedReturnNumber }
   } catch (error) {
     console.error("[v0] Error submitting return:", error)
     return { error: "Failed to submit return. Please try again." }
