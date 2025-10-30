@@ -1,0 +1,336 @@
+"use client"
+
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Spinner } from "@/components/ui/spinner"
+import { submitReturnAction } from "@/app/actions/returns"
+import { CheckCircle, AlertCircle, Plus, X } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { ImageUpload } from "@/components/returns/image-upload"
+
+const returnSchema = z.object({
+  customerName: z.string().min(1, "Name is required"),
+  customerEmail: z.string().email("Invalid email address"),
+  customerPhone: z.string().optional(),
+  orderNumber: z.string().min(1, "Order number is required"),
+  orderDate: z.string().min(1, "Order date is required"),
+  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]),
+  description: z.string().min(10, "Please provide at least 10 characters"),
+  preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
+  items: z
+    .array(
+      z.object({
+        productName: z.string().min(1, "Product name is required"),
+        sku: z.string().min(1, "SKU is required"),
+        quantity: z.number().min(1, "Quantity must be at least 1"),
+        unitPrice: z.number().min(0).optional(),
+      }),
+    )
+    .min(1, "At least one item is required"),
+  images: z.array(z.string()).optional(),
+})
+
+type ReturnFormData = z.infer<typeof returnSchema>
+
+export function ReturnForm() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [items, setItems] = useState([{ productName: "", sku: "", quantity: 1, unitPrice: 0 }])
+  const [images, setImages] = useState<string[]>([])
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<ReturnFormData>({
+    resolver: zodResolver(returnSchema),
+    defaultValues: {
+      items: [{ productName: "", sku: "", quantity: 1, unitPrice: 0 }],
+      images: [],
+    },
+  })
+
+  const reason = watch("reason")
+  const preferredResolution = watch("preferredResolution")
+
+  const addItem = () => {
+    const newItems = [...items, { productName: "", sku: "", quantity: 1, unitPrice: 0 }]
+    setItems(newItems)
+    setValue("items", newItems)
+  }
+
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      const newItems = items.filter((_, i) => i !== index)
+      setItems(newItems)
+      setValue("items", newItems)
+    }
+  }
+
+  const updateItem = (index: number, field: string, value: any) => {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    setItems(newItems)
+    setValue("items", newItems)
+  }
+
+  const onSubmit = async (data: ReturnFormData) => {
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const result = await submitReturnAction({ ...data, images })
+      if (result.error) {
+        setError(result.error)
+      } else if (result.returnNumber) {
+        setSuccess(`Return submitted successfully! Your tracking number is: ${result.returnNumber}`)
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
+        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+        <AlertDescription className="text-green-800 dark:text-green-200">{success}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Contact Information */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Contact Information</h3>
+
+        <div className="space-y-2">
+          <Label htmlFor="customerName">Full Name *</Label>
+          <Input
+            id="customerName"
+            type="text"
+            placeholder="John Doe"
+            {...register("customerName")}
+            disabled={isLoading}
+          />
+          {errors.customerName && <p className="text-sm text-destructive">{errors.customerName.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="customerEmail">Email Address *</Label>
+          <Input
+            id="customerEmail"
+            type="email"
+            placeholder="your@email.com"
+            {...register("customerEmail")}
+            disabled={isLoading}
+          />
+          {errors.customerEmail && <p className="text-sm text-destructive">{errors.customerEmail.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="customerPhone">Phone Number (optional)</Label>
+          <Input
+            id="customerPhone"
+            type="tel"
+            placeholder="+1 (555) 123-4567"
+            {...register("customerPhone")}
+            disabled={isLoading}
+          />
+          {errors.customerPhone && <p className="text-sm text-destructive">{errors.customerPhone.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="orderNumber">Order Number *</Label>
+          <Input id="orderNumber" placeholder="ORD-123456" {...register("orderNumber")} disabled={isLoading} />
+          {errors.orderNumber && <p className="text-sm text-destructive">{errors.orderNumber.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="orderDate">Order Date *</Label>
+          <Input id="orderDate" type="date" {...register("orderDate")} disabled={isLoading} />
+          {errors.orderDate && <p className="text-sm text-destructive">{errors.orderDate.message}</p>}
+        </div>
+      </div>
+
+      {/* Return Details */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Return Details</h3>
+
+        <div className="space-y-2">
+          <Label htmlFor="reason">Reason for Return *</Label>
+          <Select onValueChange={(value) => setValue("reason", value as any)} value={reason}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="DEFECTIVE">Defective/Damaged</SelectItem>
+              <SelectItem value="WRONG_ITEM">Wrong Item Received</SelectItem>
+              <SelectItem value="CHANGED_MIND">Changed Mind</SelectItem>
+              <SelectItem value="NOT_AS_DESCRIBED">Not as Described</SelectItem>
+              <SelectItem value="OTHER">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.reason && <p className="text-sm text-destructive">{errors.reason.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Description *</Label>
+          <Textarea
+            id="description"
+            placeholder="Please provide details about your return..."
+            rows={4}
+            {...register("description")}
+            disabled={isLoading}
+          />
+          {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="preferredResolution">Preferred Resolution *</Label>
+          <Select onValueChange={(value) => setValue("preferredResolution", value as any)} value={preferredResolution}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your preference" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="REFUND">Refund</SelectItem>
+              <SelectItem value="EXCHANGE">Exchange</SelectItem>
+              <SelectItem value="STORE_CREDIT">Store Credit</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.preferredResolution && (
+            <p className="text-sm text-destructive">{errors.preferredResolution.message}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Items */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Items to Return</h3>
+          <Button type="button" variant="outline" size="sm" onClick={addItem}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
+        </div>
+
+        {items.map((item, index) => (
+          <Card key={index} className="p-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Item {index + 1}</h4>
+                {items.length > 1 && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Product Name *</Label>
+                  <Input
+                    placeholder="Product name"
+                    value={item.productName}
+                    onChange={(e) => updateItem(index, "productName", e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>SKU *</Label>
+                  <Input
+                    placeholder="SKU-123"
+                    value={item.sku}
+                    onChange={(e) => updateItem(index, "sku", e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Quantity *</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 1)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Unit Price (optional)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={item.unitPrice}
+                    onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+        {errors.items && <p className="text-sm text-destructive">{errors.items.message}</p>}
+      </div>
+
+      {/* Product Images (Optional) */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Product Images (Optional)</h3>
+        <p className="text-sm text-muted-foreground">
+          Upload images of the items you're returning. This helps us process your return faster.
+        </p>
+        <ImageUpload
+          images={images}
+          onUpload={(url) => {
+            const newImages = [...images, url]
+            setImages(newImages)
+            setValue("images", newImages)
+          }}
+          onRemove={(url) => {
+            const newImages = images.filter((img) => img !== url)
+            setImages(newImages)
+            setValue("images", newImages)
+          }}
+          maxImages={5}
+        />
+      </div>
+
+      <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Spinner className="mr-2 h-4 w-4" />
+            Submitting...
+          </>
+        ) : (
+          "Submit Return Request"
+        )}
+      </Button>
+    </form>
+  )
+}
