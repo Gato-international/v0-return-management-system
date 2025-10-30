@@ -17,15 +17,9 @@ const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   sku: z.string().min(1, "SKU is required").regex(/^[A-Z0-9-]+$/, "SKU can only contain uppercase letters, numbers, and hyphens"),
   description: z.string().optional(),
-  price: z.preprocess(
-    // Explicitly define the return type of the preprocess function
-    (val): number | undefined => {
-      if (val === "" || val === null || val === undefined) return undefined;
-      const num = Number(val);
-      return isNaN(num) ? undefined : num;
-    },
-    z.number().min(0, "Price cannot be negative").optional()
-  ),
+  price: z.union([z.number().min(0, "Price cannot be negative"), z.literal(""), z.null()])
+    .transform((val) => (val === "" || val === null ? undefined : Number(val)))
+    .optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
