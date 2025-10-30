@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
@@ -22,7 +22,7 @@ export interface SessionUser {
 export async function verifyCredentials(email: string, password: string): Promise<SessionUser | null> {
   try {
     console.log("[v0] Verifying credentials for:", email)
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: user, error } = await supabase
       .from("admin_users")

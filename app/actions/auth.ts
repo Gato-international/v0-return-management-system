@@ -2,7 +2,7 @@
 
 import { verifyCredentials, createSession, setSessionCookie, clearSessionCookie } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string
@@ -23,7 +23,7 @@ export async function loginAction(formData: FormData) {
   await setSessionCookie(token)
 
   // Log the login
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   await supabase.from("audit_logs").insert({
     user_id: user.id,
     action: "LOGIN",

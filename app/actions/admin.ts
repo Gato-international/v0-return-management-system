@@ -1,12 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { sendStatusUpdateEmail } from "@/lib/utils/email"
 
 export async function updateReturnStatusAction(returnId: string, newStatus: string, notes: string, userId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Get the return to send email
     const { data: returnData } = await supabase
@@ -61,7 +61,7 @@ export async function updateReturnStatusAction(returnId: string, newStatus: stri
 
 export async function addInternalNoteAction(returnId: string, content: string, userId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { error } = await supabase.from("return_notes").insert({
       return_id: returnId,

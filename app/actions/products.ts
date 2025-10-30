@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import * as z from "zod"
 
@@ -11,7 +11,7 @@ const productSchema = z.object({
 
 export async function createProductAction(formData: FormData) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const parsedData = productSchema.parse({
       name: formData.get("name"),
       sku: formData.get("sku"),
@@ -39,7 +39,7 @@ export async function createProductAction(formData: FormData) {
 
 export async function updateProductAction(productId: string, formData: FormData) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const parsedData = productSchema.parse({
       name: formData.get("name"),
       sku: formData.get("sku"),
@@ -67,7 +67,7 @@ export async function updateProductAction(productId: string, formData: FormData)
 
 export async function deleteProductAction(productId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await supabase.from("products").delete().eq("id", productId)
 
     if (error) throw error
@@ -82,7 +82,7 @@ export async function deleteProductAction(productId: string) {
 
 export async function getProductsAction() {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { data: products, error } = await supabase.from("products").select("*").order("name", { ascending: true })
 
     if (error) throw error
