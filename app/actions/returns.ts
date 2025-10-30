@@ -6,12 +6,12 @@ import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 
 interface ReturnItem {
-  productName: string
-  sku: string
-  quantity: number
-  unitPrice?: number
-  reason?: string
-  condition?: string
+  productId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  reason: string;
+  condition?: string;
 }
 
 interface SubmitReturnData {
@@ -20,7 +20,6 @@ interface SubmitReturnData {
   customerPhone?: string
   orderNumber: string
   orderDate: string
-  reason: string
   description: string
   preferredResolution: string
   items: ReturnItem[]
@@ -42,7 +41,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
         customer_phone: data.customerPhone || null,
         order_number: data.orderNumber,
         order_date: data.orderDate,
-        reason: data.reason,
         description: data.description,
         preferred_resolution: data.preferredResolution,
         status: "pending",
@@ -59,10 +57,11 @@ export async function submitReturnAction(data: SubmitReturnData) {
 
     const itemsToInsert = data.items.map((item) => ({
       return_id: returnRecord.id,
+      product_id: item.productId,
       product_name: item.productName,
       sku: item.sku,
       quantity: item.quantity,
-      reason: item.reason || data.reason,
+      reason: item.reason,
       condition: item.condition || null,
     }))
 
@@ -124,7 +123,10 @@ export async function trackReturnAction(returnNumber: string) {
       return { error: "Return not found. Please check your tracking number." }
     }
 
-    const { data: items } = await supabase.from("return_items").select("*").eq("return_id", returnRecord.id)
+    const { data: items } = await supabase
+      .from("return_items")
+      .select("*, product:products(name, sku)")
+      .eq("return_id", returnRecord.id)
 
     const { data: statusHistory } = await supabase
       .from("return_status_history")

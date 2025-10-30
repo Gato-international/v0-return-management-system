@@ -84,13 +84,15 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
                 {index > 0 && <Separator className="my-3" />}
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{item.product_name}</p>
-                    <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
+                    <p className="font-medium">{item.product?.name || item.product_name}</p>
+                    <p className="text-sm text-muted-foreground">SKU: {item.product?.sku || item.sku}</p>
+                    {item.condition && <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-medium">Qty: {item.quantity}</p>
                   </div>
                 </div>
+                <p className="text-sm mt-2">Reason: {item.reason?.replace(/_/g, " ")}</p>
               </div>
             ))}
           </div>
@@ -106,10 +108,6 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Reason</p>
-            <p className="text-sm">{returnData.reason?.replace(/_/g, " ")}</p>
-          </div>
           {returnData.description && (
             <div>
               <p className="text-sm font-medium text-muted-foreground">Description</p>

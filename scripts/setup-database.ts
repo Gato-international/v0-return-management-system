@@ -31,7 +31,9 @@ async function setupDatabase() {
         customer_phone TEXT,
         order_number TEXT NOT NULL,
         order_date DATE NOT NULL,
-        reason TEXT NOT NULL,
+        reason TEXT, -- Made nullable as reason is now per item
+        description TEXT NOT NULL,
+        preferred_resolution TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -41,11 +43,12 @@ async function setupDatabase() {
       CREATE TABLE IF NOT EXISTS return_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         return_id UUID NOT NULL REFERENCES returns(id) ON DELETE CASCADE,
+        product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- NEW: Link to products table
         product_name TEXT NOT NULL,
         sku TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         reason TEXT NOT NULL,
-        condition TEXT NOT NULL,
+        condition TEXT, -- Made nullable
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
@@ -92,8 +95,6 @@ async function setupDatabase() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name TEXT NOT NULL,
         sku TEXT UNIQUE NOT NULL,
-        description TEXT,
-        price NUMERIC(10, 2),
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );

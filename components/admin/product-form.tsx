@@ -16,37 +16,17 @@ import { AlertCircle, CheckCircle } from "lucide-react"
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   sku: z.string().min(1, "SKU is required").regex(/^[A-Z0-9-]+$/, "SKU can only contain uppercase letters, numbers, and hyphens"),
-  description: z.string().optional(),
-  price: z.string() // Treat input as string initially
-    .optional()
-    .transform((val) => {
-      if (val === undefined || val === null || val === "") {
-        return undefined; // Convert empty string or null to undefined
-      }
-      const num = Number(val);
-      return isNaN(num) ? undefined : num; // Convert non-numeric strings to undefined
-    })
-    .pipe(z.number().min(0, "Price cannot be negative").optional()), // Then pipe to optional number validation
 })
 
-// This is the type of the data *after* Zod has processed it
 type ProductFormData = z.infer<typeof productSchema>
 
-// This is the type of the data *before* Zod has processed it, as expected by useForm for inputs
-type ProductFormInput = {
-  name: string;
-  sku: string;
-  description?: string;
-  price?: string; // Price is a string when coming directly from the input field
-};
+type ProductFormInput = ProductFormData;
 
 interface ProductFormProps {
   initialData?: {
     id: string
     name: string
     sku: string
-    description?: string | null
-    price?: number | null
   }
   onSuccess?: () => void
 }
@@ -61,13 +41,11 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormInput>({ // Use ProductFormInput here
+  } = useForm<ProductFormInput>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || "",
       sku: initialData?.sku || "",
-      description: initialData?.description || "",
-      price: initialData?.price?.toString() || "", // Ensure price is a string for the input field
     },
   })
 
@@ -76,26 +54,20 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       reset({
         name: initialData.name,
         sku: initialData.sku,
-        description: initialData.description || "",
-        price: initialData.price?.toString() || "", // Ensure price is a string for the input field
       })
     } else {
       reset({
         name: "",
         sku: "",
-        description: "",
-        price: "", // Default to empty string for new product form
       })
     }
   }, [initialData, reset])
 
-  const onSubmit = async (data: ProductFormInput) => { // data here is ProductFormInput
+  const onSubmit = async (data: ProductFormInput) => {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
-    // Zod will transform `data` to `ProductFormData` during validation
-    // We need to ensure the formData sent to actions matches the schema's output type
     const validatedData = productSchema.safeParse(data);
 
     if (!validatedData.success) {
@@ -107,8 +79,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     const formData = new FormData()
     formData.append("name", validatedData.data.name)
     formData.append("sku", validatedData.data.sku)
-    if (validatedData.data.description) formData.append("description", validatedData.data.description)
-    if (validatedData.data.price !== undefined && validatedData.data.price !== null) formData.append("price", validatedData.data.price.toString())
 
     try {
       let result
@@ -126,8 +96,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           reset({
             name: "",
             sku: "",
-            description: "",
-            price: "",
           })
         }
         onSuccess?.()
@@ -165,18 +133,6 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         <Label htmlFor="sku">SKU *</Label>
         <Input id="sku" type="text" {...register("sku")} disabled={isLoading} />
         {errors.sku && <p className="text-sm text-destructive">{errors.sku.message}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description (optional)</Label>
-        <Textarea id="description" rows={3} {...register("description")} disabled={isLoading} />
-        {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="price">Price (optional)</Label>
-        <Input id="price" type="number" step="0.01" min="0" {...register("price")} disabled={isLoading} />
-        {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

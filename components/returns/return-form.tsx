@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
@@ -15,6 +14,21 @@ import { submitReturnAction } from "@/app/actions/returns"
 import { CheckCircle, AlertCircle, Plus, X } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { ImageUpload } from "@/components/returns/image-upload"
+import { Textarea } from "../ui/textarea"
+
+// Define Product type for availableProducts prop
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+}
+
+const returnItemSchema = z.object({
+  productId: z.string().min(1, "Product selection is required"), // New: product ID
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]), // Reason for this specific item
+  condition: z.string().optional(), // Optional condition for the item
+});
 
 const returnSchema = z.object({
   customerName: z.string().min(1, "Name is required"),
@@ -22,29 +36,22 @@ const returnSchema = z.object({
   customerPhone: z.string().optional(),
   orderNumber: z.string().min(1, "Order number is required"),
   orderDate: z.string().min(1, "Order date is required"),
-  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]),
   description: z.string().min(10, "Please provide at least 10 characters"),
   preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  items: z
-    .array(
-      z.object({
-        productName: z.string().min(1, "Product name is required"),
-        sku: z.string().min(1, "SKU is required"),
-        quantity: z.number().min(1, "Quantity must be at least 1"),
-        unitPrice: z.number().min(0).optional(),
-      }),
-    )
-    .min(1, "At least one item is required"),
+  items: z.array(returnItemSchema).min(1, "At least one item is required"),
   images: z.array(z.string()).optional(),
 })
 
 type ReturnFormData = z.infer<typeof returnSchema>
 
-export function ReturnForm() {
+interface ReturnFormProps {
+  availableProducts: Product[];
+}
+
+export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [items, setItems] = useState([{ productName: "", sku: "", quantity: 1, unitPrice: 0 }])
   const [images, setImages] = useState<string[]>([])
 
   const {
@@ -53,37 +60,28 @@ export function ReturnForm() {
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<ReturnFormData>({
     resolver: zodResolver(returnSchema),
     defaultValues: {
-      items: [{ productName: "", sku: "", quantity: 1, unitPrice: 0 }],
+      items: [{ productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }],
       images: [],
     },
   })
 
-  const reason = watch("reason")
-  const preferredResolution = watch("preferredResolution")
+  const watchedItems = watch("items");
 
   const addItem = () => {
-    const newItems = [...items, { productName: "", sku: "", quantity: 1, unitPrice: 0 }]
-    setItems(newItems)
-    setValue("items", newItems)
-  }
+    const newItems = [...watchedItems, { productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }];
+    setValue("items", newItems);
+  };
 
   const removeItem = (index: number) => {
-    if (items.length > 1) {
-      const newItems = items.filter((_, i) => i !== index)
-      setItems(newItems)
-      setValue("items", newItems)
+    if (watchedItems.length > 1) {
+      const newItems = watchedItems.filter((_, i) => i !== index);
+      setValue("items", newItems);
     }
-  }
-
-  const updateItem = (index: number, field: string, value: any) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    setItems(newItems)
-    setValue("items", newItems)
-  }
+  };
 
   const onSubmit = async (data: ReturnFormData) => {
     setIsLoading(true)
@@ -91,7 +89,16 @@ export function ReturnForm() {
     setSuccess(null)
 
     try {
-      const result = await submitReturnAction({ ...data, images })
+      const itemsWithProductDetails = data.items.map(item => {
+        const product = availableProducts.find(p => p.id === item.productId);
+        return {
+          ...item,
+          productName: product?.name || "Unknown Product",
+          sku: product?.sku || "Unknown SKU",
+        };
+      });
+
+      const result = await submitReturnAction({ ...data, items: itemsWithProductDetails, images })
       if (result.error) {
         setError(result.error)
       } else if (result.returnNumber) {
@@ -180,23 +187,6 @@ export function ReturnForm() {
         <h3 className="text-lg font-semibold">Return Details</h3>
 
         <div className="space-y-2">
-          <Label htmlFor="reason">Reason for Return *</Label>
-          <Select onValueChange={(value) => setValue("reason", value as any)} value={reason}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a reason" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="DEFECTIVE">Defective/Damaged</SelectItem>
-              <SelectItem value="WRONG_ITEM">Wrong Item Received</SelectItem>
-              <SelectItem value="CHANGED_MIND">Changed Mind</SelectItem>
-              <SelectItem value="NOT_AS_DESCRIBED">Not as Described</SelectItem>
-              <SelectItem value="OTHER">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.reason && <p className="text-sm text-destructive">{errors.reason.message}</p>}
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="description">Description *</Label>
           <Textarea
             id="description"
@@ -210,7 +200,7 @@ export function ReturnForm() {
 
         <div className="space-y-2">
           <Label htmlFor="preferredResolution">Preferred Resolution *</Label>
-          <Select onValueChange={(value) => setValue("preferredResolution", value as any)} value={preferredResolution}>
+          <Select onValueChange={(value) => setValue("preferredResolution", value as any)} value={watch("preferredResolution")}>
             <SelectTrigger>
               <SelectValue placeholder="Select your preference" />
             </SelectTrigger>
@@ -236,12 +226,12 @@ export function ReturnForm() {
           </Button>
         </div>
 
-        {items.map((item, index) => (
+        {watchedItems.map((item, index) => (
           <Card key={index} className="p-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">Item {index + 1}</h4>
-                {items.length > 1 && (
+                {watchedItems.length > 1 && (
                   <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
                     <X className="h-4 w-4" />
                   </Button>
@@ -250,23 +240,24 @@ export function ReturnForm() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Product Name *</Label>
-                  <Input
-                    placeholder="Product name"
-                    value={item.productName}
-                    onChange={(e) => updateItem(index, "productName", e.target.value)}
+                  <Label>Product *</Label>
+                  <Select
+                    onValueChange={(value) => setValue(`items.${index}.productId`, value)}
+                    value={item.productId}
                     disabled={isLoading}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>SKU *</Label>
-                  <Input
-                    placeholder="SKU-123"
-                    value={item.sku}
-                    onChange={(e) => updateItem(index, "sku", e.target.value)}
-                    disabled={isLoading}
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} (SKU: {product.sku})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.items?.[index]?.productId && <p className="text-sm text-destructive">{errors.items[index]?.productId?.message}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -274,23 +265,41 @@ export function ReturnForm() {
                   <Input
                     type="number"
                     min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 1)}
+                    {...register(`items.${index}.quantity`, { valueAsNumber: true })}
                     disabled={isLoading}
                   />
+                  {errors.items?.[index]?.quantity && <p className="text-sm text-destructive">{errors.items[index]?.quantity?.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Unit Price (optional)</Label>
+                  <Label>Reason for Return *</Label>
+                  <Select
+                    onValueChange={(value) => setValue(`items.${index}.reason`, value as any)}
+                    value={item.reason}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DEFECTIVE">Defective/Damaged</SelectItem>
+                      <SelectItem value="WRONG_ITEM">Wrong Item Received</SelectItem>
+                      <SelectItem value="CHANGED_MIND">Changed Mind</SelectItem>
+                      <SelectItem value="NOT_AS_DESCRIBED">Not as Described</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.items?.[index]?.reason && <p className="text-sm text-destructive">{errors.items[index]?.reason?.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Condition (optional)</Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={item.unitPrice}
-                    onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., 'New', 'Used', 'Damaged'"
+                    {...register(`items.${index}.condition`)}
                     disabled={isLoading}
                   />
+                  {errors.items?.[index]?.condition && <p className="text-sm text-destructive">{errors.items[index]?.condition?.message}</p>}
                 </div>
               </div>
             </div>

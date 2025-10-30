@@ -24,8 +24,6 @@ interface Product {
   id: string
   name: string
   sku: string
-  description?: string | null
-  price?: number | null
   created_at: string
 }
 
@@ -45,8 +43,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
     const lowerCaseSearchTerm = searchTerm.toLowerCase()
     return (
       product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      product.sku.toLowerCase().includes(lowerCaseSearchTerm) ||
-      (product.description?.toLowerCase() || "").includes(lowerCaseSearchTerm)
+      product.sku.toLowerCase().includes(lowerCaseSearchTerm)
     )
   })
 
@@ -91,7 +88,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search products by name, SKU, or description..."
+          placeholder="Search products by name or SKU..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9"
@@ -105,15 +102,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
             <TableRow>
               <TableHead>Product Name</TableHead>
               <TableHead>SKU</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Description</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                   No products found
                 </TableCell>
               </TableRow>
@@ -122,8 +117,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.sku}</TableCell>
-                  <TableCell>{product.price ? `$${product.price.toFixed(2)}` : "N/A"}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{product.description || "N/A"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleEditClick(product)}>

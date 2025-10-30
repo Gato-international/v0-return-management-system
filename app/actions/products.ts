@@ -7,8 +7,6 @@ import * as z from "zod"
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   sku: z.string().min(1, "SKU is required").regex(/^[A-Z0-9-]+$/, "SKU can only contain uppercase letters, numbers, and hyphens"),
-  description: z.string().optional(),
-  price: z.number().min(0, "Price cannot be negative").optional(),
 })
 
 export async function createProductAction(formData: FormData) {
@@ -17,8 +15,6 @@ export async function createProductAction(formData: FormData) {
     const parsedData = productSchema.parse({
       name: formData.get("name"),
       sku: formData.get("sku"),
-      description: formData.get("description"),
-      price: parseFloat(formData.get("price") as string) || undefined,
     })
 
     const { error } = await supabase.from("products").insert(parsedData)
@@ -47,8 +43,6 @@ export async function updateProductAction(productId: string, formData: FormData)
     const parsedData = productSchema.parse({
       name: formData.get("name"),
       sku: formData.get("sku"),
-      description: formData.get("description"),
-      price: parseFloat(formData.get("price") as string) || undefined,
     })
 
     const { error } = await supabase.from("products").update(parsedData).eq("id", productId)

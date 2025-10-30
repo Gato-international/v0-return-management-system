@@ -3,8 +3,16 @@ import { ReturnForm } from "@/components/returns/return-form"
 import { Package } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { getProductsAction } from "@/app/actions/products"
 
-export default function CreateReturnPage() {
+export default async function CreateReturnPage() {
+  const { products, error } = await getProductsAction();
+
+  if (error) {
+    console.error("Failed to fetch products for return form:", error);
+    // Optionally, display an error message to the user or handle gracefully
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -32,7 +40,7 @@ export default function CreateReturnPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ReturnForm />
+            <ReturnForm availableProducts={products || []} />
           </CardContent>
         </Card>
       </main>

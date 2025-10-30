@@ -49,7 +49,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
 
   // Fetch related data
   const [{ data: items }, { data: statusHistory }, { data: notes }, { data: images }] = await Promise.all([
-    supabase.from("return_items").select("*").eq("return_id", id),
+    supabase.from("return_items").select("*, product:products(name, sku)").eq("return_id", id),
     supabase.from("return_status_history").select("*").eq("return_id", id).order("created_at", { ascending: false }),
     supabase
       .from("return_notes")
@@ -136,9 +136,9 @@ export default async function ReturnDetailPage({ params }: PageProps) {
                       {index > 0 && <Separator className="my-3" />}
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium">{item.product_name}</p>
-                          <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
-                          <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>
+                          <p className="font-medium">{item.product?.name || item.product_name}</p>
+                          <p className="text-sm text-muted-foreground">SKU: {item.product?.sku || item.sku}</p>
+                          {item.condition && <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>}
                         </div>
                         <div className="text-right">
                           <p className="font-medium">Qty: {item.quantity}</p>
@@ -161,13 +161,19 @@ export default async function ReturnDetailPage({ params }: PageProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Reason</p>
-                  <p className="text-sm">{returnData.reason}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Description</p>
+                  <p className="text-sm">{returnData.description}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Order Date</p>
                   <p className="text-sm">{format(new Date(returnData.order_date), "MMM d, yyyy")}</p>
                 </div>
+                {returnData.preferred_resolution && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Preferred Resolution</p>
+                    <p className="text-sm">{returnData.preferred_resolution?.replace(/_/g, " ")}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
