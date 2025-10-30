@@ -7,7 +7,6 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { createProductAction, updateProductAction } from "@/app/actions/products"
@@ -19,8 +18,6 @@ const productSchema = z.object({
 })
 
 type ProductFormData = z.infer<typeof productSchema>
-
-type ProductFormInput = ProductFormData;
 
 interface ProductFormProps {
   initialData?: {
@@ -41,7 +38,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormInput>({
+  } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || "",
@@ -63,29 +60,17 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     }
   }, [initialData, reset])
 
-  const onSubmit = async (data: ProductFormInput) => {
+  const onSubmit = async (data: ProductFormData) => {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
-    const validatedData = productSchema.safeParse(data);
-
-    if (!validatedData.success) {
-      setError(validatedData.error.errors.map(e => e.message).join(", "));
-      setIsLoading(false);
-      return;
-    }
-
-    const formData = new FormData()
-    formData.append("name", validatedData.data.name)
-    formData.append("sku", validatedData.data.sku)
-
     try {
       let result
       if (initialData?.id) {
-        result = await updateProductAction(initialData.id, formData)
+        result = await updateProductAction(initialData.id, data)
       } else {
-        result = await createProductAction(formData)
+        result = await createProductAction(data)
       }
 
       if (result.error) {

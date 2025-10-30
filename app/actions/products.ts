@@ -9,15 +9,13 @@ const productSchema = z.object({
   sku: z.string().min(1, "SKU is required").regex(/^[A-Z0-9-]+$/, "SKU can only contain uppercase letters, numbers, and hyphens"),
 })
 
-export async function createProductAction(formData: FormData) {
+type ProductFormData = z.infer<typeof productSchema>
+
+export async function createProductAction(data: ProductFormData) {
   try {
     const supabase = createAdminClient()
-    const parsedData = productSchema.parse({
-      name: formData.get("name"),
-      sku: formData.get("sku"),
-    })
+    const parsedData = productSchema.parse(data)
 
-    // Explicitly add timestamp to handle cases where DB default is missing
     const dataToInsert = {
       ...parsedData,
       updated_at: new Date().toISOString(),
@@ -27,7 +25,6 @@ export async function createProductAction(formData: FormData) {
 
     if (error) {
       if (error.code === "23505") {
-        // Unique violation code
         return { error: "A product with this SKU already exists." }
       }
       throw error
@@ -44,15 +41,11 @@ export async function createProductAction(formData: FormData) {
   }
 }
 
-export async function updateProductAction(productId: string, formData: FormData) {
+export async function updateProductAction(productId: string, data: ProductFormData) {
   try {
     const supabase = createAdminClient()
-    const parsedData = productSchema.parse({
-      name: formData.get("name"),
-      sku: formData.get("sku"),
-    })
+    const parsedData = productSchema.parse(data)
 
-    // Explicitly add timestamp
     const dataToUpdate = {
       ...parsedData,
       updated_at: new Date().toISOString(),
@@ -62,7 +55,6 @@ export async function updateProductAction(productId: string, formData: FormData)
 
     if (error) {
       if (error.code === "23505") {
-        // Unique violation code
         return { error: "A product with this SKU already exists." }
       }
       throw error
