@@ -3,7 +3,13 @@ import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production")
+const JWT_SECRET_ENV = process.env.JWT_SECRET;
+if (!JWT_SECRET_ENV || JWT_SECRET_ENV === "your-secret-key-change-in-production") {
+  console.error("[v0] CRITICAL ERROR: JWT_SECRET environment variable is not set or is using the default placeholder. Please set a strong, unique secret in your .env file.");
+  // In a production application, you might want to throw an error here to prevent the app from starting.
+  // For now, we'll proceed with the default but log a severe warning.
+}
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_ENV || "your-secret-key-change-in-production");
 
 export interface SessionUser {
   id: string
