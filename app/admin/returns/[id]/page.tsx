@@ -73,7 +73,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
             </Link>
             <div>
               <h1 className="text-2xl font-bold">Return #{returnData.return_number}</h1>
-              <p className="text-sm text-muted-foreground">Order: {returnData.order_number}</p>
+              <p className="text-sm text-muted-foreground">Order: {returnData.order_number || "N/A"}</p>
             </div>
           </div>
           <form action={logoutAction}>
@@ -166,7 +166,9 @@ export default async function ReturnDetailPage({ params }: PageProps) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Order Date</p>
-                  <p className="text-sm">{format(new Date(returnData.order_date), "MMM d, yyyy")}</p>
+                  <p className="text-sm">
+                    {returnData.order_date ? format(new Date(returnData.order_date), "MMM d, yyyy") : "N/A"}
+                  </p>
                 </div>
                 {returnData.preferred_resolution && (
                   <div>

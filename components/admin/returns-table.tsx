@@ -128,7 +128,7 @@ export function ReturnsTable({ returns }: ReturnsTableProps) {
                       <div className="text-sm text-muted-foreground">{returnItem.customer_email}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{returnItem.order_number}</TableCell>
+                  <TableCell>{returnItem.order_number || "N/A"}</TableCell>
                   <TableCell>{returnItem.items?.length || 0}</TableCell>
                   <TableCell>
                     <Badge className={statusColors[returnItem.status] || "bg-gray-500"}>

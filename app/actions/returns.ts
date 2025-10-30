@@ -18,8 +18,8 @@ interface SubmitReturnData {
   customerName: string
   customerEmail: string
   customerPhone?: string
-  orderNumber: string
-  orderDate: string
+  orderNumber?: string
+  orderDate?: string
   description: string
   preferredResolution: string
   items: ReturnItem[]
@@ -49,8 +49,8 @@ export async function submitReturnAction(data: SubmitReturnData) {
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
-        order_number: data.orderNumber,
-        order_date: data.orderDate,
+        order_number: data.orderNumber || null,
+        order_date: data.orderDate || null,
         reason: reasonSummary, // Add the summary reason to satisfy the constraint
         description: data.description,
         preferred_resolution: data.preferredResolution,
@@ -109,7 +109,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
       }
     }
 
-    await sendReturnConfirmationEmail(data.customerEmail, returnNumber, data.orderNumber)
+    await sendReturnConfirmationEmail(data.customerEmail, returnNumber, data.orderNumber || "N/A")
 
     revalidatePath("/admin/dashboard")
 

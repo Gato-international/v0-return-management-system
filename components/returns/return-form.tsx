@@ -34,8 +34,8 @@ const returnSchema = z.object({
   customerName: z.string().min(1, "Name is required"),
   customerEmail: z.string().email("Invalid email address"),
   customerPhone: z.string().optional(),
-  orderNumber: z.string().min(1, "Order number is required"),
-  orderDate: z.string().min(1, "Order date is required"),
+  orderNumber: z.string().optional(),
+  orderDate: z.string().optional(),
   description: z.string().min(10, "Please provide at least 10 characters"),
   preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
   items: z.array(returnItemSchema).min(1, "At least one item is required"),
@@ -168,18 +168,6 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
             disabled={isLoading}
           />
           {errors.customerPhone && <p className="text-sm text-destructive">{errors.customerPhone.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="orderNumber">Order Number *</Label>
-          <Input id="orderNumber" placeholder="ORD-123456" {...register("orderNumber")} disabled={isLoading} />
-          {errors.orderNumber && <p className="text-sm text-destructive">{errors.orderNumber.message}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="orderDate">Order Date *</Label>
-          <Input id="orderDate" type="date" {...register("orderDate")} disabled={isLoading} />
-          {errors.orderDate && <p className="text-sm text-destructive">{errors.orderDate.message}</p>}
         </div>
       </div>
 

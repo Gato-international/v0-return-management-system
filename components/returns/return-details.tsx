@@ -48,7 +48,7 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Return #{returnData.return_number}</CardTitle>
-              <CardDescription>Order: {returnData.order_number}</CardDescription>
+              <CardDescription>Order: {returnData.order_number || "N/A"}</CardDescription>
             </div>
             <Badge className={statusColors[returnData.status] || "bg-gray-500"}>
               {statusLabels[returnData.status] || returnData.status}
