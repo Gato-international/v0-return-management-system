@@ -2,7 +2,7 @@ import { requireAuth } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
-import { Package, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Box } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 
@@ -100,6 +100,12 @@ export default async function DashboardPage() {
               <Button className="w-full justify-start bg-transparent" variant="outline">
                 <Clock className="mr-2 h-4 w-4" />
                 Pending Reviews
+              </Button>
+            </Link>
+            <Link href="/admin/products">
+              <Button className="w-full justify-start bg-transparent" variant="outline">
+                <Box className="mr-2 h-4 w-4" />
+                Manage Products
               </Button>
             </Link>
           </CardContent>
