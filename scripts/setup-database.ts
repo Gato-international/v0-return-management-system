@@ -22,16 +22,19 @@ async function setupDatabase() {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      -- Create sequence for return_number
+      CREATE SEQUENCE IF NOT EXISTS returns_return_number_seq;
+
       -- Create returns table
       CREATE TABLE IF NOT EXISTS returns (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        return_number TEXT UNIQUE NOT NULL,
+        return_number BIGINT UNIQUE NOT NULL DEFAULT nextval('returns_return_number_seq'),
         customer_name TEXT NOT NULL,
         customer_email TEXT NOT NULL,
         customer_phone TEXT,
-        order_number TEXT NOT NULL,
-        order_date DATE NOT NULL,
-        reason TEXT, -- Made nullable as reason is now per item
+        order_number TEXT,
+        order_date DATE,
+        reason TEXT,
         description TEXT NOT NULL,
         preferred_resolution TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
@@ -43,12 +46,12 @@ async function setupDatabase() {
       CREATE TABLE IF NOT EXISTS return_items (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         return_id UUID NOT NULL REFERENCES returns(id) ON DELETE CASCADE,
-        product_id UUID REFERENCES products(id) ON DELETE SET NULL, -- NEW: Link to products table
+        product_id UUID REFERENCES products(id) ON DELETE SET NULL,
         product_name TEXT NOT NULL,
         sku TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         reason TEXT NOT NULL,
-        condition TEXT, -- Made nullable
+        condition TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 

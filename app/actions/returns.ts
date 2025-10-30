@@ -1,7 +1,6 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { generateReturnNumber } from "@/lib/utils/return-number"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 
@@ -30,7 +29,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
   try {
     console.log("[v0] Submitting return with data:", data)
     const supabase = await createClient()
-    const returnNumber = generateReturnNumber()
 
     // Create a summary of reasons from all items.
     // This provides a general reason for the return record,
@@ -45,7 +43,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
-        return_number: returnNumber,
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
@@ -109,11 +106,12 @@ export async function submitReturnAction(data: SubmitReturnData) {
       }
     }
 
-    await sendReturnConfirmationEmail(data.customerEmail, returnNumber, data.orderNumber || "N/A")
+    // Use the auto-generated return_number from the database
+    await sendReturnConfirmationEmail(data.customerEmail, String(returnRecord.return_number), data.orderNumber || "N/A")
 
     revalidatePath("/admin/dashboard")
 
-    return { success: true, returnNumber }
+    return { success: true, returnNumber: returnRecord.return_number }
   } catch (error) {
     console.error("[v0] Error submitting return:", error)
     return { error: "Failed to submit return. Please try again." }
