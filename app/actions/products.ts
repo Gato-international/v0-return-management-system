@@ -17,10 +17,17 @@ export async function createProductAction(formData: FormData) {
       sku: formData.get("sku"),
     })
 
-    const { error } = await supabase.from("products").insert(parsedData)
+    // Explicitly add timestamp to handle cases where DB default is missing
+    const dataToInsert = {
+      ...parsedData,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await supabase.from("products").insert(dataToInsert)
 
     if (error) {
-      if (error.code === "23505") { // Unique violation code
+      if (error.code === "23505") {
+        // Unique violation code
         return { error: "A product with this SKU already exists." }
       }
       throw error
@@ -31,7 +38,7 @@ export async function createProductAction(formData: FormData) {
   } catch (error: any) {
     console.error("[v0] Error creating product:", error)
     if (error instanceof z.ZodError) {
-      return { error: error.errors.map(e => e.message).join(", ") }
+      return { error: error.errors.map((e) => e.message).join(", ") }
     }
     return { error: "Failed to create product." }
   }
@@ -45,10 +52,17 @@ export async function updateProductAction(productId: string, formData: FormData)
       sku: formData.get("sku"),
     })
 
-    const { error } = await supabase.from("products").update(parsedData).eq("id", productId)
+    // Explicitly add timestamp
+    const dataToUpdate = {
+      ...parsedData,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await supabase.from("products").update(dataToUpdate).eq("id", productId)
 
     if (error) {
-      if (error.code === "23505") { // Unique violation code
+      if (error.code === "23505") {
+        // Unique violation code
         return { error: "A product with this SKU already exists." }
       }
       throw error
@@ -59,7 +73,7 @@ export async function updateProductAction(productId: string, formData: FormData)
   } catch (error: any) {
     console.error("[v0] Error updating product:", error)
     if (error instanceof z.ZodError) {
-      return { error: error.errors.map(e => e.message).join(", ") }
+      return { error: error.errors.map((e) => e.message).join(", ") }
     }
     return { error: "Failed to update product." }
   }
