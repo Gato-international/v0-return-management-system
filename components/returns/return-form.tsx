@@ -72,7 +72,8 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const watchedItems = watch("items");
 
   const addItem = () => {
-    const newItems = [...watchedItems, { productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }];
+    const newItem: z.infer<typeof returnItemSchema> = { productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" };
+    const newItems = [...watchedItems, newItem];
     setValue("items", newItems);
   };
 
