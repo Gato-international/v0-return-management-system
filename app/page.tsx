@@ -11,7 +11,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Package className="h-6 w-6" />
-            <h1 className="text-xl font-semibold">ReturnHub</h1>
+            <h1 className="text-xl font-semibold">GATO-INTERNATIONAL</h1>
           </div>
           <Link href="/admin">
             <Button variant="ghost" size="sm">
@@ -25,10 +25,10 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">Hassle-Free Returns Management</h2>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">Offical Gato-international Return portal</h2>
           <p className="text-lg text-muted-foreground text-balance">
             Submit return requests and track their status in real-time. Our streamlined process makes returns simple and
-            transparent.
+            transparent for our B2B users.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/returns/create">
@@ -101,7 +101,7 @@ export default function HomePage() {
       <footer className="border-t border-border mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <p>&copy; 2025 ReturnHub. All rights reserved.</p>
+            <p>&copy; 2025 Gato-international B.V. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/returns/policy" className="hover:text-foreground transition-colors">
                 Return Policy
