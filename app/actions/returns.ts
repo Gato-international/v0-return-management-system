@@ -6,12 +6,12 @@ import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 
 interface ReturnItem {
-  productId: string;
-  productName: string;
-  sku: string;
-  quantity: number;
-  reason: string;
-  condition?: string;
+  productId: string
+  productName: string
+  sku: string
+  quantity: number
+  reason: string
+  condition?: string
 }
 
 interface SubmitReturnData {
@@ -32,6 +32,16 @@ export async function submitReturnAction(data: SubmitReturnData) {
     const supabase = await createClient()
     const returnNumber = generateReturnNumber()
 
+    // Create a summary of reasons from all items.
+    // This provides a general reason for the return record,
+    // satisfying the schema constraint if it exists, while details remain per-item.
+    const reasonSummary =
+      data.items.length > 0
+        ? `Return for ${data.items.length} item(s). Reasons include: ${[
+            ...new Set(data.items.map((item) => item.reason.replace(/_/g, " "))),
+          ].join(", ")}`
+        : "General return request"
+
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
@@ -41,6 +51,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
         customer_phone: data.customerPhone || null,
         order_number: data.orderNumber,
         order_date: data.orderDate,
+        reason: reasonSummary, // Add the summary reason to satisfy the constraint
         description: data.description,
         preferred_resolution: data.preferredResolution,
         status: "pending",
