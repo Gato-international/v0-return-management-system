@@ -113,9 +113,13 @@ async function setupDatabase() {
       CREATE INDEX IF NOT EXISTS idx_return_notes_return_id ON return_notes(return_id);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_return_id ON audit_logs(return_id);
       CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+
+      -- Grant permissions for sequence usage to allow public form submissions
+      GRANT USAGE, SELECT ON SEQUENCE returns_return_number_seq TO anon;
+      GRANT USAGE, SELECT ON SEQUENCE returns_return_number_seq TO authenticated;
     `
 
-    console.log("[v0] Creating tables...")
+    console.log("[v0] Creating tables and setting permissions...")
     const { error: tablesError } = await supabase.rpc("exec_sql", { sql: createTablesSQL })
 
     if (tablesError) {
@@ -123,7 +127,7 @@ async function setupDatabase() {
       throw tablesError
     }
 
-    console.log("[v0] Tables created successfully!")
+    console.log("[v0] Tables and permissions set successfully!")
 
     // Generate password hash for admin user
     console.log("[v0] Generating admin password hash...")
