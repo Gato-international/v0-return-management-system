@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
-import { sql } from "@supabase/postgrest-js"
+import sql from "@supabase/postgrest-js"
 
 interface ReturnItem {
   productId: string
