@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
-// Removed: import { sql } from "@supabase/supabase-js" // Re-import the sql helper
+import { sql } from "@supabase/postgrest-js" // Correct import for the sql helper
 
 interface ReturnItem {
   productId: string
@@ -45,8 +45,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
-        // Removed return_number: sql`nextval('returns_return_number_seq')`
-        // The database will automatically assign nextval() because it's the default.
+        return_number: sql`DEFAULT`, // Explicitly tell Supabase/PostgreSQL to use the column's default value
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
