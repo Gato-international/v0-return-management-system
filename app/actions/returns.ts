@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
-import { sql } from "@supabase/postgrest-js" // Correct import for the sql helper
+import { sql } from "@supabase/postgrest-js"
 
 interface ReturnItem {
   productId: string
@@ -32,16 +32,8 @@ export async function submitReturnAction(data: SubmitReturnData) {
     console.log("[v0] Submitting return with data:", data)
     const supabase = await createClient()
 
-    // Create a summary of reasons from all items.
-    // This provides a general reason for the return record,
-    // satisfying the schema constraint if it exists, while details remain per-item.
-    const reasonSummary =
-      data.items.length > 0
-        ? `Return for ${data.items.length} item(s). Reasons include: ${[
-            ...new Set(data.items.map((item) => item.reason.replace(/_/g, " "))),
-          ].join(", ")}`
-        : "General return request"
-
+    // The top-level 'reason' is deprecated as reasons are now per-item.
+    // The database column 'reason' on the 'returns' table should be nullable.
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
@@ -51,7 +43,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
         customer_phone: data.customerPhone || null,
         order_number: data.orderNumber || null,
         order_date: data.orderDate || null,
-        reason: reasonSummary, // Add the summary reason to satisfy the constraint
         description: data.description,
         preferred_resolution: data.preferredResolution,
         status: "pending",
@@ -110,7 +101,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
     }
 
     // Use the auto-generated return_number from the database and format it
-    const formattedReturnNumber = formatReturnNumber(returnRecord.return_number);
+    const formattedReturnNumber = formatReturnNumber(returnRecord.return_number)
     await sendReturnConfirmationEmail(data.customerEmail, formattedReturnNumber, data.orderNumber || "N/A")
 
     revalidatePath("/admin/dashboard")
