@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { sendReturnConfirmationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
-import { sql } from "@supabase/supabase-js" // Import the sql helper
+// Removed: import { sql } from "@supabase/supabase-js" // Import the sql helper
 
 interface ReturnItem {
   productId: string
@@ -45,7 +45,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
-        return_number: sql`nextval('returns_return_number_seq')`, // Explicitly use the sequence
+        // Removed: return_number: sql`nextval('returns_return_number_seq')`, // Explicitly use the sequence
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
