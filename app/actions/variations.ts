@@ -31,7 +31,15 @@ export async function createVariationAction(data: CreateVariationFormData) {
     return { error: { _form: ["Could not verify product attributes."] } }
   }
 
-  const requiredAttributeNames = productAttributesData?.map(item => item.variation_attributes.name) || []
+  const requiredAttributeNames =
+    productAttributesData
+      ?.map((item) => {
+        // The type inference can be incorrect, treating a single object as an array.
+        // We safely access the first element, as !inner implies a single related row.
+        const attr = Array.isArray(item.variation_attributes) ? item.variation_attributes[0] : item.variation_attributes
+        return attr?.name
+      })
+      .filter(Boolean) as string[] | undefined || []
 
   if (requiredAttributeNames.length === 0) {
     return { error: { _form: ["This product has no attributes linked. Cannot create variations."] } }
@@ -70,7 +78,7 @@ export async function updateVariationAction(variationId: string, productId: stri
   if (!validation.success) {
     return { error: { _form: ["Invalid data submitted."] } }
   }
-  
+
   const { attributes } = validation.data
   const supabase = createAdminClient()
 
@@ -84,7 +92,13 @@ export async function updateVariationAction(variationId: string, productId: stri
     return { error: { _form: ["Could not verify product attributes."] } }
   }
 
-  const requiredAttributeNames = productAttributesData?.map(item => item.variation_attributes.name) || []
+  const requiredAttributeNames =
+    productAttributesData
+      ?.map((item) => {
+        const attr = Array.isArray(item.variation_attributes) ? item.variation_attributes[0] : item.variation_attributes
+        return attr?.name
+      })
+      .filter(Boolean) as string[] | undefined || []
 
   for (const name of requiredAttributeNames) {
     if (!attributes[name] || attributes[name].trim() === "") {
