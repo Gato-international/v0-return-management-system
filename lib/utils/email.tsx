@@ -1,10 +1,12 @@
-// Email utility functions with HTML templates
-export async function sendReturnConfirmationEmail(email: string, returnNumber: string, orderNumber: string) {
-  // In production, integrate with email service (SendGrid, Resend, etc.)
-  console.log("[v0] Sending confirmation email to:", email)
-  console.log("[v0] Return Number:", returnNumber)
-  console.log("[v0] Order Number:", orderNumber)
+import { Resend } from "resend"
 
+// Initialize Resend client if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+// NOTE: You must verify this domain/email in your Resend account.
+const fromEmail = process.env.EMAIL_FROM || "noreply@yourdomain.com"
+
+export async function sendReturnConfirmationEmail(email: string, returnNumber: string, orderNumber: string) {
+  const subject = `Return Request Received - #${returnNumber}`
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -41,16 +43,29 @@ export async function sendReturnConfirmationEmail(email: string, returnNumber: s
     </html>
   `
 
-  // Placeholder for email sending logic
-  return true
+  if (!resend) {
+    console.log("[v0] RESEND_API_KEY not set. Skipping actual email sending.")
+    console.log(`[v0] To: ${email}`)
+    console.log(`[v0] Subject: ${subject}`)
+    return true
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+    })
+    console.log("[v0] Confirmation email sent successfully via Resend.")
+    return true
+  } catch (error) {
+    console.error("[v0] Failed to send confirmation email:", error)
+    return false
+  }
 }
 
 export async function sendStatusUpdateEmail(email: string, returnNumber: string, status: string, notes?: string) {
-  console.log("[v0] Sending status update email to:", email)
-  console.log("[v0] Return Number:", returnNumber)
-  console.log("[v0] New Status:", status)
-  console.log("[v0] Notes:", notes)
-
   const statusMessages: Record<string, { title: string; message: string }> = {
     SUBMITTED: {
       title: "Return Submitted",
@@ -91,6 +106,7 @@ export async function sendStatusUpdateEmail(email: string, returnNumber: string,
     message: "Your return status has been updated.",
   }
 
+  const subject = `Update on your return #${returnNumber}: ${statusInfo.title}`
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -126,5 +142,24 @@ export async function sendStatusUpdateEmail(email: string, returnNumber: string,
     </html>
   `
 
-  return true
+  if (!resend) {
+    console.log("[v0] RESEND_API_KEY not set. Skipping actual email sending.")
+    console.log(`[v0] To: ${email}`)
+    console.log(`[v0] Subject: ${subject}`)
+    return true
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+    })
+    console.log("[v0] Status update email sent successfully via Resend.")
+    return true
+  } catch (error) {
+    console.error("[v0] Failed to send status update email:", error)
+    return false
+  }
 }
