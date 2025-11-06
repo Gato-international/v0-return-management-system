@@ -4,7 +4,8 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import "../globals.css"
-import { NextIntlClientProvider, useMessages } from "next-intl"
+import { NextIntlClientProvider } from "next-intl"
+import { getMessages } from "next-intl/server"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -19,19 +20,19 @@ export const metadata: Metadata = {
   description: "Professional B2B return management platform",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-  params,
+  params: { locale },
 }: {
   children: React.ReactNode
   params: { locale: string }
 }) {
-  const messages = useMessages()
+  const messages = await getMessages()
 
   return (
-    <html lang={params.locale} className={playfairDisplay.variable}>
+    <html lang={locale} className={playfairDisplay.variable}>
       <body className={`font-sans antialiased`}>
-        <NextIntlClientProvider locale={params.locale} messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <Toaster />
           <Analytics />
