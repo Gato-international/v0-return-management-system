@@ -3,13 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
 import { Package, Clock, CheckCircle, XCircle, Box, Settings } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 
 export default async function DashboardPage() {
   const user = await requireAuth()
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const [totalReturns, pendingReturns, approvedReturns, rejectedReturns] = await Promise.all([
     supabase.from("returns").select("*", { count: "exact", head: true }),

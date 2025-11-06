@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
@@ -15,7 +15,7 @@ export default async function AdminReturnsPage({ searchParams }: PageProps) {
   await requireAuth()
   const statusFilter = searchParams.status
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Fetch returns with optional status filter
   let query = supabase.from("returns").select("*, items:return_items(*)")

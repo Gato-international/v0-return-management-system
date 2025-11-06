@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
   await requireAuth()
   const resolvedParams = await params
   const { id } = resolvedParams
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Step 1: Fetch the product and its linked attribute IDs
   const { data: product, error: productError } = await supabase

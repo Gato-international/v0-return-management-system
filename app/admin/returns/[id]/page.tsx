@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
   const resolvedParams = await params
   const { id } = resolvedParams
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: returnData } = await supabase.from("returns").select("*").eq("id", id).single()
 
