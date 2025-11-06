@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ReturnForm } from "@/components/returns/return-form"
 import { Package, HelpCircle } from "lucide-react"
@@ -22,6 +22,11 @@ interface CreateReturnClientPageProps {
 
 export function CreateReturnClientPage({ products }: CreateReturnClientPageProps) {
   const [runTour, setRunTour] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data
@@ -34,7 +39,7 @@ export function CreateReturnClientPage({ products }: CreateReturnClientPageProps
 
   return (
     <>
-      <ReturnFormTour run={runTour} callback={handleTourCallback} />
+      {isClient && <ReturnFormTour run={runTour} callback={handleTourCallback} />}
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="border-b border-border bg-card">
