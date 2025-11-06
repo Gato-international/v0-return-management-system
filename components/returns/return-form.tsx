@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, UseFormSetValue, UseFormRegister, FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -57,11 +57,19 @@ type ItemWithDetails = z.infer<typeof returnItemSchema> & {
   sku: string
 }
 
-function ReturnItemCard({ index, availableProducts, control, register, errors, remove, canRemove }: any) {
+interface ReturnItemCardProps {
+  index: number
+  availableProducts: Product[]
+  setValue: UseFormSetValue<ReturnFormData>
+  register: UseFormRegister<ReturnFormData>
+  errors: FieldErrors<ReturnFormData>
+  remove: (index: number) => void
+  canRemove: boolean
+}
+
+function ReturnItemCard({ index, availableProducts, setValue, register, errors, remove, canRemove }: ReturnItemCardProps) {
   const [selectedProductId, setSelectedProductId] = useState("")
   const [selectedColor, setSelectedColor] = useState("")
-
-  const { setValue } = control
 
   const selectedProduct = useMemo(
     () => availableProducts.find((p: Product) => p.id === selectedProductId),
@@ -306,7 +314,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
             key={field.id}
             index={index}
             availableProducts={availableProducts}
-            control={control}
+            setValue={setValue}
             register={register}
             errors={errors}
             remove={remove}
