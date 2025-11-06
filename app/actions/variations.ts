@@ -23,7 +23,7 @@ export async function createVariationAction(data: CreateVariationFormData) {
   // Server-side check: Ensure all attributes for the product are provided and valid
   const { data: productAttributesData, error: attrError } = await supabase
     .from("product_to_variation_attributes")
-    .select("attribute:variation_attributes!inner(name)")
+    .select("variation_attributes!inner(name)")
     .eq("product_id", productId)
 
   if (attrError) {
@@ -31,7 +31,7 @@ export async function createVariationAction(data: CreateVariationFormData) {
     return { error: { _form: ["Could not verify product attributes."] } }
   }
 
-  const requiredAttributeNames = productAttributesData?.map(item => item.attribute.name) || []
+  const requiredAttributeNames = productAttributesData?.map(item => item.variation_attributes.name) || []
 
   if (requiredAttributeNames.length === 0) {
     return { error: { _form: ["This product has no attributes linked. Cannot create variations."] } }
@@ -77,14 +77,14 @@ export async function updateVariationAction(variationId: string, productId: stri
   // Similar validation as create
   const { data: productAttributesData, error: attrError } = await supabase
     .from("product_to_variation_attributes")
-    .select("attribute:variation_attributes!inner(name)")
+    .select("variation_attributes!inner(name)")
     .eq("product_id", productId)
 
   if (attrError) {
     return { error: { _form: ["Could not verify product attributes."] } }
   }
 
-  const requiredAttributeNames = productAttributesData?.map(item => item.attribute.name) || []
+  const requiredAttributeNames = productAttributesData?.map(item => item.variation_attributes.name) || []
 
   for (const name of requiredAttributeNames) {
     if (!attributes[name] || attributes[name].trim() === "") {
