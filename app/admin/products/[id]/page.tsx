@@ -69,7 +69,12 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
               <CardDescription>Edit or delete existing variations.</CardDescription>
             </CardHeader>
             <CardContent>
-              <VariationsTable productId={product.id} variations={product.variations || []} />
+              <VariationsTable
+                productId={product.id}
+                variations={product.variations || []}
+                productHasColor={product.has_color}
+                productHasSize={product.has_size}
+              />
             </CardContent>
           </Card>
         </div>
