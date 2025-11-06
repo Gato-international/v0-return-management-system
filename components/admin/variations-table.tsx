@@ -24,15 +24,18 @@ interface Variation {
   color: string | null
   size: string | null
 }
-
+interface Attribute {
+  id: string
+  name: string
+  options: { id: string; value: string }[]
+}
 interface VariationsTableProps {
   productId: string
   variations: Variation[]
-  productHasColor: boolean
-  productHasSize: boolean
+  productAttributes: Attribute[]
 }
 
-export function VariationsTable({ productId, variations, productHasColor, productHasSize }: VariationsTableProps) {
+export function VariationsTable({ productId, variations, productAttributes }: VariationsTableProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [variationToDelete, setVariationToDelete] = useState<string | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -120,8 +123,7 @@ export function VariationsTable({ productId, variations, productHasColor, produc
           {variationToEdit && (
             <VariationForm
               productId={productId}
-              productHasColor={productHasColor}
-              productHasSize={productHasSize}
+              productAttributes={productAttributes}
               initialData={variationToEdit}
               onSuccess={() => setIsEditDialogOpen(false)}
             />

@@ -21,18 +21,25 @@ import { deleteProductAction } from "@/app/actions/products"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
+interface Attribute {
+  id: string
+  name: string
+}
+
 interface Product {
   id: string
   name: string
   sku: string
   created_at: string
+  attributes: { attribute_id: string }[]
 }
 
 interface ProductsTableProps {
   products: Product[]
+  allAttributes: Attribute[]
 }
 
-export function ProductsTable({ products }: ProductsTableProps) {
+export function ProductsTable({ products, allAttributes }: ProductsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
@@ -163,7 +170,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
-          {productToEdit && <ProductForm initialData={productToEdit} onSuccess={handleEditSuccess} />}
+          {productToEdit && <ProductForm initialData={productToEdit} allAttributes={allAttributes} onSuccess={handleEditSuccess} />}
         </DialogContent>
       </Dialog>
     </div>

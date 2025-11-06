@@ -5,41 +5,49 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { useToast } from "@/hooks/use-toast"
 import { AlertCircle } from "lucide-react"
 import { createVariationAction, updateVariationAction } from "@/app/actions/variations"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const variationSchema = z.object({
   color: z.string().optional(),
   size: z.string().optional(),
 }).refine(data => data.color || data.size, {
-    message: "At least one variation attribute is required.",
-    path: ["_form"],
-});
+  message: "At least one variation attribute is required.",
+  path: ["_form"],
+})
 
 type VariationFormData = z.infer<typeof variationSchema>
 
+interface Option {
+  id: string
+  value: string
+}
+interface Attribute {
+  id: string
+  name: string
+  options: Option[]
+}
 interface VariationFormProps {
   productId: string
-  productHasColor: boolean
-  productHasSize: boolean
+  productAttributes: Attribute[]
   initialData?: { id: string; color?: string | null; size?: string | null }
   onSuccess?: () => void
 }
 
-export function VariationForm({ productId, productHasColor, productHasSize, initialData, onSuccess }: VariationFormProps) {
+export function VariationForm({ productId, productAttributes, initialData, onSuccess }: VariationFormProps) {
   const { toast } = useToast()
   const isEditMode = !!initialData
 
   const {
-    register,
     handleSubmit,
     reset,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<VariationFormData>({
     resolver: zodResolver(variationSchema),
@@ -50,11 +58,7 @@ export function VariationForm({ productId, productHasColor, productHasSize, init
   })
 
   useEffect(() => {
-    const defaultValues = {
-      color: initialData?.color || "",
-      size: initialData?.size || "",
-    }
-    reset(defaultValues)
+    reset(initialData || { color: "", size: "" })
   }, [initialData, reset])
 
   const onSubmit = async (data: VariationFormData) => {
@@ -101,22 +105,24 @@ export function VariationForm({ productId, productHasColor, productHasSize, init
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        {productHasColor && (
-          <div className="space-y-2">
-            <Label htmlFor="color">Color</Label>
-            <Input id="color" {...register("color")} disabled={isSubmitting} />
-            {errors.color && <p className="text-sm text-destructive mt-1">{errors.color.message}</p>}
-          </div>
-        )}
-        {productHasSize && (
-          <div className="space-y-2">
-            <Label htmlFor="size">Size</Label>
-            <Input id="size" {...register("size")} disabled={isSubmitting} />
-            {errors.size && <p className="text-sm text-destructive mt-1">{errors.size.message}</p>}
-          </div>
-        )}
-      </div>
+      {productAttributes.map(attr => (
+        <div key={attr.id} className="space-y-2">
+          <Label>{attr.name}</Label>
+          <Select
+            onValueChange={(value) => setValue(attr.name.toLowerCase() as "color" | "size", value)}
+            defaultValue={isEditMode ? (initialData?.[attr.name.toLowerCase() as "color" | "size"] || "") : ""}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Select ${attr.name}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {attr.options.map(opt => (
+                <SelectItem key={opt.id} value={opt.value}>{opt.value}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ))}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}

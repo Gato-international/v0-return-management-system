@@ -2,7 +2,7 @@ import { requireAuth } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
-import { Package, Clock, CheckCircle, XCircle, Box } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Box, Settings } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 
@@ -11,7 +11,6 @@ export default async function DashboardPage() {
 
   const supabase = await createClient()
 
-  // Get statistics
   const [totalReturns, pendingReturns, approvedReturns, rejectedReturns] = await Promise.all([
     supabase.from("returns").select("*", { count: "exact", head: true }),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -21,7 +20,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
@@ -38,7 +36,6 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
@@ -92,24 +89,30 @@ export default async function DashboardPage() {
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Link href="/admin/returns">
-              <Button className="w-full justify-start bg-transparent" variant="outline">
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/returns">
                 <Package className="mr-2 h-4 w-4" />
                 View All Returns
-              </Button>
-            </Link>
-            <Link href="/admin/returns?status=pending">
-              <Button className="w-full justify-start bg-transparent" variant="outline">
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/returns?status=pending">
                 <Clock className="mr-2 h-4 w-4" />
                 Pending Reviews
-              </Button>
-            </Link>
-            <Link href="/admin/products">
-              <Button className="w-full justify-start bg-transparent" variant="outline">
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/products">
                 <Box className="mr-2 h-4 w-4" />
                 Manage Products
-              </Button>
-            </Link>
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/variations">
+                <Settings className="mr-2 h-4 w-4" />
+                Manage Variations
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </main>

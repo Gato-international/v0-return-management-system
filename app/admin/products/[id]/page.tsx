@@ -9,7 +9,7 @@ import { VariationForm } from "@/components/admin/variation-form"
 import { VariationsTable } from "@/components/admin/variations-table"
 
 interface PageProps {
-  params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
+  params: any
 }
 
 export default async function ManageProductVariationsPage({ params }: PageProps) {
@@ -20,13 +20,25 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
 
   const { data: product, error } = await supabase
     .from("products")
-    .select("*, variations:product_variations(*)")
+    .select(`
+      *,
+      variations:product_variations(*),
+      attributes:product_to_variation_attributes(
+        attribute:variation_attributes(
+          *,
+          options:variation_options(*)
+        )
+      )
+    `)
     .eq("id", id)
     .single()
 
   if (error || !product) {
+    console.error("Error fetching product for variations page:", error)
     notFound()
   }
+
+  const productAttributes = product.attributes.map((a: any) => a.attribute)
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -51,13 +63,12 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
           <Card>
             <CardHeader>
               <CardTitle>Add New Variation</CardTitle>
-              <CardDescription>Create a new color, size, or other variant for this product.</CardDescription>
+              <CardDescription>Create a new variant for this product.</CardDescription>
             </CardHeader>
             <CardContent>
               <VariationForm
                 productId={product.id}
-                productHasColor={product.has_color}
-                productHasSize={product.has_size}
+                productAttributes={productAttributes}
               />
             </CardContent>
           </Card>
@@ -72,8 +83,7 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
               <VariationsTable
                 productId={product.id}
                 variations={product.variations || []}
-                productHasColor={product.has_color}
-                productHasSize={product.has_size}
+                productAttributes={productAttributes}
               />
             </CardContent>
           </Card>

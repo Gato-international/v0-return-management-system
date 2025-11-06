@@ -4,122 +4,115 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-// Define a strict schema for product data for validation.
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
-  has_color: z.boolean().optional(),
-  has_size: z.boolean().optional(),
+  attributeIds: z.array(z.string().uuid()).optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
 
-// Action to create a new product.
 export async function createProductAction(data: ProductFormData) {
-  try {
-    const validation = productSchema.safeParse(data)
-    if (!validation.success) {
-      return { error: validation.error.flatten().fieldErrors }
-    }
+  const validation = productSchema.safeParse(data)
+  if (!validation.success) {
+    return { error: validation.error.flatten().fieldErrors }
+  }
 
-    const supabase = createAdminClient()
-    const { error } = await supabase.from("products").insert({
+  const supabase = createAdminClient()
+  const { data: newProduct, error: productError } = await supabase
+    .from("products")
+    .insert({ name: validation.data.name, sku: validation.data.sku })
+    .select()
+    .single()
+
+  if (productError) {
+    if (productError.code === "23505") return { error: { sku: ["A product with this SKU already exists."] } }
+    return { error: { _form: ["A database error occurred creating the product."] } }
+  }
+
+  if (validation.data.attributeIds && validation.data.attributeIds.length > 0) {
+    const attributesToLink = validation.data.attributeIds.map(attrId => ({
+      product_id: newProduct.id,
+      attribute_id: attrId,
+    }))
+    const { error: linkError } = await supabase.from("product_to_variation_attributes").insert(attributesToLink)
+    if (linkError) {
+      return { error: { _form: ["A database error occurred linking attributes."] } }
+    }
+  }
+
+  revalidatePath("/admin/products")
+  return { success: true }
+}
+
+export async function updateProductAction(productId: string, data: ProductFormData) {
+  const validation = productSchema.safeParse(data)
+  if (!validation.success) {
+    return { error: validation.error.flatten().fieldErrors }
+  }
+
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("products")
+    .update({
       name: validation.data.name,
       sku: validation.data.sku,
-      has_color: validation.data.has_color ?? false,
-      has_size: validation.data.has_size ?? false,
+      updated_at: new Date().toISOString(),
     })
+    .eq("id", productId)
 
-    if (error) {
-      if (error.code === "23505") { // Handle unique SKU constraint violation
-        return { error: { sku: ["A product with this SKU already exists."] } }
-      }
-      console.error("Supabase error creating product:", error)
-      return { error: { _form: ["A database error occurred. Please try again."] } }
-    }
-
-    revalidatePath("/admin/products")
-    return { success: true }
-  } catch (e) {
-    console.error("Unexpected error in createProductAction:", e)
-    return { error: { _form: ["An unexpected error occurred."] } }
+  if (error) {
+    if (error.code === "23505") return { error: { sku: ["A product with this SKU already exists."] } }
+    return { error: { _form: ["A database error occurred updating the product."] } }
   }
+
+  const { error: deleteError } = await supabase.from("product_to_variation_attributes").delete().eq("product_id", productId)
+  if (deleteError) {
+    return { error: { _form: ["A database error occurred updating attributes."] } }
+  }
+
+  if (validation.data.attributeIds && validation.data.attributeIds.length > 0) {
+    const attributesToLink = validation.data.attributeIds.map(attrId => ({
+      product_id: productId,
+      attribute_id: attrId,
+    }))
+    const { error: linkError } = await supabase.from("product_to_variation_attributes").insert(attributesToLink)
+    if (linkError) {
+      return { error: { _form: ["A database error occurred linking new attributes."] } }
+    }
+  }
+
+  revalidatePath("/admin/products")
+  revalidatePath(`/admin/products/${productId}`)
+  return { success: true }
 }
 
-// Action to update an existing product.
-export async function updateProductAction(productId: string, data: ProductFormData) {
-  try {
-    const validation = productSchema.safeParse(data)
-    if (!validation.success) {
-      return { error: validation.error.flatten().fieldErrors }
-    }
-
-    const supabase = createAdminClient()
-    const { error } = await supabase
-      .from("products")
-      .update({
-        name: validation.data.name,
-        sku: validation.data.sku,
-        has_color: validation.data.has_color ?? false,
-        has_size: validation.data.has_size ?? false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", productId)
-
-    if (error) {
-      if (error.code === "23505") {
-        return { error: { sku: ["A product with this SKU already exists."] } }
-      }
-      console.error("Supabase error updating product:", error)
-      return { error: { _form: ["A database error occurred. Please try again."] } }
-    }
-
-    revalidatePath("/admin/products")
-    return { success: true }
-  } catch (e) {
-    console.error("Unexpected error in updateProductAction:", e)
-    return { error: { _form: ["An unexpected error occurred."] } }
-  }
-}
-
-// Action to delete a product.
 export async function deleteProductAction(productId: string) {
   try {
     const supabase = createAdminClient()
     const { error } = await supabase.from("products").delete().eq("id", productId)
-
-    if (error) {
-      console.error("Supabase error deleting product:", error)
-      return { error: "Failed to delete product due to a database error." }
-    }
-
+    if (error) throw error
     revalidatePath("/admin/products")
     return { success: true }
   } catch (e) {
-    console.error("Unexpected error in deleteProductAction:", e)
     return { error: "An unexpected error occurred." }
   }
 }
 
-// Action to fetch all products with their variations.
 export async function getProductsAction() {
   try {
     const supabase = createAdminClient()
     const { data: products, error } = await supabase
       .from("products")
-      .select("*, variations:product_variations(*)")
+      .select("*, variations:product_variations(*), attributes:product_to_variation_attributes(attribute_id)")
       .order("name", { ascending: true })
-      .order("color", { referencedTable: "product_variations", ascending: true })
-      .order("size", { referencedTable: "product_variations", ascending: true })
 
     if (error) {
-      console.error("Supabase error fetching products with variations:", error)
+      console.error("Supabase error fetching products:", error)
       return { products: [], error: "Failed to fetch products." }
     }
-
     return { products }
   } catch (e) {
-    console.error("Unexpected error in getProductsAction:", e)
     return { products: [], error: "An unexpected error occurred." }
   }
 }

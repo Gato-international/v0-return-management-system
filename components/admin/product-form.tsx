@@ -17,18 +17,28 @@ import { Checkbox } from "@/components/ui/checkbox"
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
-  has_color: z.boolean().optional(),
-  has_size: z.boolean().optional(),
+  attributeIds: z.array(z.string().uuid()).optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
 
+interface Attribute {
+  id: string
+  name: string
+}
+
 interface ProductFormProps {
-  initialData?: { id: string; name: string; sku: string; has_color: boolean; has_size: boolean }
+  initialData?: {
+    id: string
+    name: string
+    sku: string
+    attributes: { attribute_id: string }[]
+  }
+  allAttributes: Attribute[]
   onSuccess?: () => void
 }
 
-export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
+export function ProductForm({ initialData, allAttributes, onSuccess }: ProductFormProps) {
   const { toast } = useToast()
   const isEditMode = !!initialData
 
@@ -37,19 +47,23 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     handleSubmit,
     reset,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: initialData?.name || "",
       sku: initialData?.sku || "",
-      has_color: initialData?.has_color || false,
-      has_size: initialData?.has_size || false,
+      attributeIds: initialData?.attributes.map(a => a.attribute_id) || [],
     },
   })
 
   useEffect(() => {
-    reset(initialData || { name: "", sku: "", has_color: false, has_size: false })
+    reset({
+      name: initialData?.name || "",
+      sku: initialData?.sku || "",
+      attributeIds: initialData?.attributes.map(a => a.attribute_id) || [],
+    })
   }, [initialData, reset])
 
   const onSubmit = async (data: ProductFormData) => {
@@ -64,11 +78,8 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
           description: `Product has been successfully ${isEditMode ? "updated" : "created"}.`,
         })
         onSuccess?.()
-        if (!isEditMode) {
-          reset()
-        }
+        if (!isEditMode) reset()
       } else if (result.error) {
-        // Handle specific field errors from the server
         Object.entries(result.error).forEach(([key, value]) => {
           setError(key as keyof ProductFormData | "root.serverError", {
             type: "server",
@@ -79,7 +90,7 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     } catch (e) {
       setError("root.serverError", {
         type: "server",
-        message: "An unexpected error occurred. Please try again.",
+        message: "An unexpected error occurred.",
       })
     }
   }
@@ -106,30 +117,28 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Variation Settings</Label>
-        <div className="flex items-center space-x-4 rounded-md border p-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox id="has_color" {...register("has_color")} />
-            <Label htmlFor="has_color" className="font-normal">Has Color Variations</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="has_size" {...register("has_size")} />
-            <Label htmlFor="has_size" className="font-normal">Has Size Variations</Label>
-          </div>
+        <Label>Variation Attributes</Label>
+        <div className="space-y-2 rounded-md border p-3">
+          {allAttributes.length > 0 ? (
+            allAttributes.map(attr => (
+              <div key={attr.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`attr-${attr.id}`}
+                  value={attr.id}
+                  {...register("attributeIds")}
+                />
+                <Label htmlFor={`attr-${attr.id}`} className="font-normal">{attr.name}</Label>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No attributes defined. Go to Manage Variations to add some.</p>
+          )}
         </div>
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? (
-          <>
-            <Spinner className="mr-2 h-4 w-4" />
-            {isEditMode ? "Saving..." : "Creating..."}
-          </>
-        ) : isEditMode ? (
-          "Update Product"
-        ) : (
-          "Create Product"
-        )}
+        {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}
+        {isEditMode ? "Update Product" : "Create Product"}
       </Button>
     </form>
   )

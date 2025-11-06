@@ -1,5 +1,4 @@
 import { requireAuth } from "@/lib/auth"
-import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
@@ -9,21 +8,18 @@ import { ProductsTable } from "@/components/admin/products-table"
 import { ProductForm } from "@/components/admin/product-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { getProductsAction } from "@/app/actions/products"
+import { getAttributesWithOptions } from "@/app/actions/attributes"
 
 export default async function AdminProductsPage() {
-  await requireAuth() // Ensure user is authenticated
+  await requireAuth()
 
-  const { products, error } = await getProductsAction()
-
-  if (error) {
-    // Handle error, maybe display a message or redirect
-    console.error("Failed to fetch products:", error)
-    // For now, we'll proceed with an empty array
-  }
+  const [{ products, error: productsError }, { attributes, error: attributesError }] = await Promise.all([
+    getProductsAction(),
+    getAttributesWithOptions(),
+  ])
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -46,7 +42,6 @@ export default async function AdminProductsPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -65,12 +60,12 @@ export default async function AdminProductsPage() {
                 <DialogHeader>
                   <DialogTitle>Create New Product</DialogTitle>
                 </DialogHeader>
-                <ProductForm />
+                <ProductForm allAttributes={attributes || []} />
               </DialogContent>
             </Dialog>
           </CardHeader>
           <CardContent>
-            <ProductsTable products={products || []} />
+            <ProductsTable products={products || []} allAttributes={attributes || []} />
           </CardContent>
         </Card>
       </main>
