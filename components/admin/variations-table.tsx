@@ -21,7 +21,6 @@ import { VariationForm } from "./variation-form"
 
 interface Variation {
   id: string
-  sku: string
   color: string | null
   size: string | null
 }
@@ -66,7 +65,6 @@ export function VariationsTable({ productId, variations }: VariationsTableProps)
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>SKU</TableHead>
               <TableHead>Color</TableHead>
               <TableHead>Size</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -75,12 +73,11 @@ export function VariationsTable({ productId, variations }: VariationsTableProps)
           <TableBody>
             {variations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center h-24">No variations found.</TableCell>
+                <TableCell colSpan={3} className="text-center h-24">No variations found.</TableCell>
               </TableRow>
             ) : (
               variations.map((variation) => (
                 <TableRow key={variation.id}>
-                  <TableCell className="font-medium">{variation.sku}</TableCell>
                   <TableCell>{variation.color || "N/A"}</TableCell>
                   <TableCell>{variation.size || "N/A"}</TableCell>
                   <TableCell className="text-right">
@@ -121,6 +118,8 @@ export function VariationsTable({ productId, variations }: VariationsTableProps)
           {variationToEdit && (
             <VariationForm
               productId={productId}
+              productHasColor={!!variationToEdit.color}
+              productHasSize={!!variationToEdit.size}
               initialData={variationToEdit}
               onSuccess={() => setIsEditDialogOpen(false)}
             />

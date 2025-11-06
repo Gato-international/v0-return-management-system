@@ -12,16 +12,19 @@ import { Spinner } from "@/components/ui/spinner"
 import { createProductAction, updateProductAction } from "@/app/actions/products"
 import { useToast } from "@/hooks/use-toast"
 import { AlertCircle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
+  has_color: z.boolean().optional(),
+  has_size: z.boolean().optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
 
 interface ProductFormProps {
-  initialData?: { id: string; name: string; sku: string }
+  initialData?: { id: string; name: string; sku: string; has_color: boolean; has_size: boolean }
   onSuccess?: () => void
 }
 
@@ -40,11 +43,13 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
     defaultValues: {
       name: initialData?.name || "",
       sku: initialData?.sku || "",
+      has_color: initialData?.has_color || false,
+      has_size: initialData?.has_size || false,
     },
   })
 
   useEffect(() => {
-    reset(initialData || { name: "", sku: "" })
+    reset(initialData || { name: "", sku: "", has_color: false, has_size: false })
   }, [initialData, reset])
 
   const onSubmit = async (data: ProductFormData) => {
@@ -98,6 +103,20 @@ export function ProductForm({ initialData, onSuccess }: ProductFormProps) {
         <Label htmlFor="sku">SKU *</Label>
         <Input id="sku" {...register("sku")} disabled={isSubmitting} />
         {errors.sku && <p className="text-sm text-destructive mt-1">{errors.sku.message}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Variation Settings</Label>
+        <div className="flex items-center space-x-4 rounded-md border p-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox id="has_color" {...register("has_color")} />
+            <Label htmlFor="has_color" className="font-normal">Has Color Variations</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="has_size" {...register("has_size")} />
+            <Label htmlFor="has_size" className="font-normal">Has Size Variations</Label>
+          </div>
+        </div>
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

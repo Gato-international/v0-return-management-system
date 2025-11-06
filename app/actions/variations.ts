@@ -5,10 +5,13 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 const variationSchema = z.object({
-  sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
   color: z.string().optional(),
   size: z.string().optional(),
-})
+}).refine(data => data.color || data.size, {
+    message: "At least one variation attribute (color or size) is required.",
+    path: ["_form"],
+});
+
 
 type VariationFormData = z.infer<typeof variationSchema>
 
@@ -22,14 +25,13 @@ export async function createVariationAction(productId: string, data: VariationFo
     const supabase = createAdminClient()
     const { error } = await supabase.from("product_variations").insert({
       product_id: productId,
-      sku: validation.data.sku,
       color: validation.data.color || null,
       size: validation.data.size || null,
     })
 
     if (error) {
       if (error.code === "23505") {
-        return { error: { sku: ["A variation with this SKU already exists."] } }
+        return { error: { _form: ["A variation with these attributes already exists."] } }
       }
       throw error
     }
@@ -53,7 +55,6 @@ export async function updateVariationAction(variationId: string, productId: stri
     const { error } = await supabase
       .from("product_variations")
       .update({
-        sku: validation.data.sku,
         color: validation.data.color || null,
         size: validation.data.size || null,
         updated_at: new Date().toISOString(),
@@ -62,7 +63,7 @@ export async function updateVariationAction(variationId: string, productId: stri
 
     if (error) {
       if (error.code === "23505") {
-        return { error: { sku: ["A variation with this SKU already exists."] } }
+        return { error: { _form: ["A variation with these attributes already exists."] } }
       }
       throw error
     }

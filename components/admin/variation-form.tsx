@@ -14,20 +14,24 @@ import { AlertCircle } from "lucide-react"
 import { createVariationAction, updateVariationAction } from "@/app/actions/variations"
 
 const variationSchema = z.object({
-  sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
   color: z.string().optional(),
   size: z.string().optional(),
-})
+}).refine(data => data.color || data.size, {
+    message: "At least one variation attribute is required.",
+    path: ["_form"],
+});
 
 type VariationFormData = z.infer<typeof variationSchema>
 
 interface VariationFormProps {
   productId: string
-  initialData?: { id: string; sku: string; color?: string | null; size?: string | null }
+  productHasColor: boolean
+  productHasSize: boolean
+  initialData?: { id: string; color?: string | null; size?: string | null }
   onSuccess?: () => void
 }
 
-export function VariationForm({ productId, initialData, onSuccess }: VariationFormProps) {
+export function VariationForm({ productId, productHasColor, productHasSize, initialData, onSuccess }: VariationFormProps) {
   const { toast } = useToast()
   const isEditMode = !!initialData
 
@@ -40,7 +44,6 @@ export function VariationForm({ productId, initialData, onSuccess }: VariationFo
   } = useForm<VariationFormData>({
     resolver: zodResolver(variationSchema),
     defaultValues: {
-      sku: initialData?.sku || "",
       color: initialData?.color || "",
       size: initialData?.size || "",
     },
@@ -48,7 +51,6 @@ export function VariationForm({ productId, initialData, onSuccess }: VariationFo
 
   useEffect(() => {
     const defaultValues = {
-      sku: initialData?.sku || "",
       color: initialData?.color || "",
       size: initialData?.size || "",
     }
@@ -92,24 +94,28 @@ export function VariationForm({ productId, initialData, onSuccess }: VariationFo
           <AlertDescription>{errors.root.serverError.message}</AlertDescription>
         </Alert>
       )}
+      {errors._form && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors._form.message}</AlertDescription>
+        </Alert>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="sku">Variation SKU *</Label>
-        <Input id="sku" {...register("sku")} disabled={isSubmitting} />
-        {errors.sku && <p className="text-sm text-destructive mt-1">{errors.sku.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="color">Color</Label>
-          <Input id="color" {...register("color")} disabled={isSubmitting} />
-          {errors.color && <p className="text-sm text-destructive mt-1">{errors.color.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="size">Size</Label>
-          <Input id="size" {...register("size")} disabled={isSubmitting} />
-          {errors.size && <p className="text-sm text-destructive mt-1">{errors.size.message}</p>}
-        </div>
+      <div className="grid grid-cols-1 gap-4">
+        {productHasColor && (
+          <div className="space-y-2">
+            <Label htmlFor="color">Color</Label>
+            <Input id="color" {...register("color")} disabled={isSubmitting} />
+            {errors.color && <p className="text-sm text-destructive mt-1">{errors.color.message}</p>}
+          </div>
+        )}
+        {productHasSize && (
+          <div className="space-y-2">
+            <Label htmlFor="size">Size</Label>
+            <Input id="size" {...register("size")} disabled={isSubmitting} />
+            {errors.size && <p className="text-sm text-destructive mt-1">{errors.size.message}</p>}
+          </div>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

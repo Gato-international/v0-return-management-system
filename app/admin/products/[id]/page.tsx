@@ -7,7 +7,6 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { VariationForm } from "@/components/admin/variation-form"
 import { VariationsTable } from "@/components/admin/variations-table"
-import { Separator } from "@/components/ui/separator"
 
 interface PageProps {
   params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
@@ -55,7 +54,11 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
               <CardDescription>Create a new color, size, or other variant for this product.</CardDescription>
             </CardHeader>
             <CardContent>
-              <VariationForm productId={product.id} />
+              <VariationForm
+                productId={product.id}
+                productHasColor={product.has_color}
+                productHasSize={product.has_size}
+              />
             </CardContent>
           </Card>
         </div>

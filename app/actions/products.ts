@@ -8,6 +8,8 @@ import { z } from "zod"
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
+  has_color: z.boolean().optional(),
+  has_size: z.boolean().optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -24,6 +26,8 @@ export async function createProductAction(data: ProductFormData) {
     const { error } = await supabase.from("products").insert({
       name: validation.data.name,
       sku: validation.data.sku,
+      has_color: validation.data.has_color ?? false,
+      has_size: validation.data.has_size ?? false,
     })
 
     if (error) {
@@ -56,6 +60,8 @@ export async function updateProductAction(productId: string, data: ProductFormDa
       .update({
         name: validation.data.name,
         sku: validation.data.sku,
+        has_color: validation.data.has_color ?? false,
+        has_size: validation.data.has_size ?? false,
         updated_at: new Date().toISOString(),
       })
       .eq("id", productId)
@@ -103,7 +109,8 @@ export async function getProductsAction() {
       .from("products")
       .select("*, variations:product_variations(*)")
       .order("name", { ascending: true })
-      .order("sku", { referencedTable: "product_variations", ascending: true })
+      .order("color", { referencedTable: "product_variations", ascending: true })
+      .order("size", { referencedTable: "product_variations", ascending: true })
 
     if (error) {
       console.error("Supabase error fetching products with variations:", error)

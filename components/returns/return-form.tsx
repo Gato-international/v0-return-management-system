@@ -18,7 +18,6 @@ import { Textarea } from "../ui/textarea"
 
 interface Variation {
   id: string
-  sku: string
   color?: string | null
   size?: string | null
 }
@@ -218,7 +217,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
               return {
                 ...item,
                 productName: product.name,
-                sku: variation.sku,
+                sku: product.sku,
               }
             }
           }
