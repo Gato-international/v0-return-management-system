@@ -111,11 +111,16 @@ export async function submitReturnAction(data: SubmitReturnData) {
 export async function trackReturnAction(returnNumber: string, email: string) {
   try {
     const supabase = await createClient()
+    const numericReturnNumber = parseInt(returnNumber, 10)
+
+    if (isNaN(numericReturnNumber)) {
+      return { error: "Invalid return number format." }
+    }
 
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .select("*")
-      .eq("return_number", returnNumber)
+      .eq("return_number", numericReturnNumber)
       .eq("customer_email", email)
       .single()
 
