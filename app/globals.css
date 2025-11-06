@@ -122,3 +122,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .day-with-dot {
+    @apply relative;
+  }
+  .day-with-dot::after {
+    content: '';
+    @apply absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary;
+  }
+}
