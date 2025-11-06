@@ -6,7 +6,8 @@ import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface ReturnItem {
-  productVariationId: string
+  productId: string
+  productVariationId?: string
   productName: string
   sku: string
   quantity: number
@@ -55,7 +56,8 @@ export async function submitReturnAction(data: SubmitReturnData) {
 
     const itemsToInsert = data.items.map((item) => ({
       return_id: returnRecord.id,
-      product_variation_id: item.productVariationId,
+      product_id: item.productId,
+      product_variation_id: item.productVariationId || null,
       product_name: item.productName,
       sku: item.sku,
       quantity: item.quantity,

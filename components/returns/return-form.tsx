@@ -18,6 +18,7 @@ import { Textarea } from "../ui/textarea"
 
 interface Variation {
   id: string
+  sku?: string | null
   attributes: Record<string, string>
 }
 interface Product {
@@ -28,22 +29,12 @@ interface Product {
 }
 
 const returnItemSchema = z.object({
-  productVariationId: z.string().min(1, "Please select a complete product variation."),
+  productVariationId: z.string().optional(),
   quantity: z.number().min(1, "Quantity must be at least 1."),
   reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]),
   condition: z.string().optional(),
   selectedProduct: z.string().min(1, "Please select a product."),
   selectedAttributes: z.record(z.string()).optional(),
-})
-
-const returnSchema = z.object({
-  customerName: z.string().min(1, "Name is required"),
-  customerEmail: z.string().email("Invalid email address"),
-  customerPhone: z.string().optional(),
-  description: z.string().min(10, "Please provide at least 10 characters."),
-  preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  items: z.array(returnItemSchema).min(1, "At least one item is required."),
-  images: z.array(z.string()).optional(),
 })
 
 type ReturnFormData = z.infer<typeof returnSchema>
@@ -52,9 +43,14 @@ interface ReturnFormProps {
   availableProducts: Product[]
 }
 
-type ItemWithDetails = Omit<z.infer<typeof returnItemSchema>, "selectedProduct" | "selectedAttributes"> & {
+interface ActionReturnItem {
+  productId: string
+  productVariationId?: string
   productName: string
   sku: string
+  quantity: number
+  reason: string
+  condition?: string
 }
 
 interface ReturnItemCardProps {
@@ -77,14 +73,16 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
     [selectedProductId, availableProducts]
   )
 
+  const hasVariations = useMemo(() => selectedProduct && selectedProduct.variations.length > 0, [selectedProduct])
+
   const productAttributes = useMemo(() => {
-    if (!selectedProduct) return []
+    if (!selectedProduct || !hasVariations) return []
     const attributes = new Set<string>()
     selectedProduct.variations.forEach(v => {
       Object.keys(v.attributes).forEach(attr => attributes.add(attr))
     })
     return Array.from(attributes)
-  }, [selectedProduct])
+  }, [selectedProduct, hasVariations])
 
   const getAvailableOptions = (attributeName: string, currentSelections: Record<string, string>) => {
     if (!selectedProduct) return []
@@ -106,8 +104,7 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
 
   const handleAttributeChange = (attributeName: string, value: string) => {
     const newSelections = { ...selectedAttributes, [attributeName]: value }
-    
-    // Reset subsequent attribute selections
+
     const attrIndex = productAttributes.indexOf(attributeName)
     for (let i = attrIndex + 1; i < productAttributes.length; i++) {
       const subsequentAttr = productAttributes[i]
@@ -115,8 +112,7 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
     }
 
     setValue(`items.${index}.selectedAttributes`, newSelections)
-    
-    // Check if a full variation is selected
+
     const finalVariation = selectedProduct?.variations.find(v => {
       return productAttributes.every(attr => v.attributes[attr] === newSelections[attr])
     })
@@ -141,7 +137,13 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
         </div>
         <div className="space-y-2">
           <Label>Product *</Label>
-          <Select onValueChange={(value) => setValue(`items.${index}.selectedProduct`, value)}>
+          <Select
+            onValueChange={(value) => {
+              setValue(`items.${index}.selectedProduct`, value)
+              setValue(`items.${index}.selectedAttributes`, {})
+              setValue(`items.${index}.productVariationId`, "")
+            }}
+          >
             <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
             <SelectContent>
               {availableProducts.map((p: Product) => (
@@ -151,35 +153,39 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
           </Select>
         </div>
 
-        {productAttributes.map((attrName, attrIndex) => {
-          const currentSelectionsForThisDropdown: Record<string, string> = {}
-          for (let i = 0; i < attrIndex; i++) {
-            const prevAttrName = productAttributes[i]
-            if (selectedAttributes[prevAttrName]) {
-              currentSelectionsForThisDropdown[prevAttrName] = selectedAttributes[prevAttrName]
-            }
-          }
-          const options = getAvailableOptions(attrName, currentSelectionsForThisDropdown)
-          const isEnabled = attrIndex === 0 ? !!selectedProduct : !!selectedAttributes[productAttributes[attrIndex - 1]]
+        {hasVariations && (
+          <>
+            {productAttributes.map((attrName, attrIndex) => {
+              const currentSelectionsForThisDropdown: Record<string, string> = {}
+              for (let i = 0; i < attrIndex; i++) {
+                const prevAttrName = productAttributes[i]
+                if (selectedAttributes[prevAttrName]) {
+                  currentSelectionsForThisDropdown[prevAttrName] = selectedAttributes[prevAttrName]
+                }
+              }
+              const options = getAvailableOptions(attrName, currentSelectionsForThisDropdown)
+              const isEnabled = attrIndex === 0 ? !!selectedProduct : !!selectedAttributes[productAttributes[attrIndex - 1]]
 
-          return (
-            <div key={attrName} className="space-y-2">
-              <Label>{attrName} *</Label>
-              <Select
-                onValueChange={(value) => handleAttributeChange(attrName, value)}
-                value={selectedAttributes[attrName] || ""}
-                disabled={!isEnabled}
-              >
-                <SelectTrigger><SelectValue placeholder={`Select ${attrName}`} /></SelectTrigger>
-                <SelectContent>
-                  {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )
-        })}
-        {errors.items?.[index]?.productVariationId && <p className="text-sm text-destructive">{errors.items[index]?.productVariationId?.message}</p>}
-        
+              return (
+                <div key={attrName} className="space-y-2">
+                  <Label>{attrName} *</Label>
+                  <Select
+                    onValueChange={(value) => handleAttributeChange(attrName, value)}
+                    value={selectedAttributes[attrName] || ""}
+                    disabled={!isEnabled}
+                  >
+                    <SelectTrigger><SelectValue placeholder={`Select ${attrName}`} /></SelectTrigger>
+                    <SelectContent>
+                      {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            })}
+            {errors.items?.[index]?.productVariationId && <p className="text-sm text-destructive">{errors.items[index]?.productVariationId?.message}</p>}
+          </>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Quantity *</Label>
@@ -205,11 +211,37 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
   )
 }
 
+const baseReturnSchema = z.object({
+  customerName: z.string().min(1, "Name is required"),
+  customerEmail: z.string().email("Invalid email address"),
+  customerPhone: z.string().optional(),
+  description: z.string().min(10, "Please provide at least 10 characters."),
+  preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
+  images: z.array(z.string()).optional(),
+})
+
 export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
+
+  const returnSchema = useMemo(() => {
+    const itemSchemaWithRefine = returnItemSchema.superRefine((data, ctx) => {
+      const product = availableProducts.find(p => p.id === data.selectedProduct)
+      if (product && product.variations.length > 0 && !data.productVariationId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["productVariationId"],
+          message: "Please select a complete product variation.",
+        })
+      }
+    })
+
+    return baseReturnSchema.extend({
+      items: z.array(itemSchemaWithRefine).min(1, "At least one item is required."),
+    })
+  }, [availableProducts])
 
   const {
     register,
@@ -217,7 +249,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     formState: { errors },
     control,
     setValue,
-  } = useForm<ReturnFormData>({
+  } = useForm<z.infer<typeof returnSchema>>({
     resolver: zodResolver(returnSchema),
     defaultValues: {
       items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" }],
@@ -227,28 +259,32 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" })
 
-  const onSubmit = async (data: ReturnFormData) => {
+  const onSubmit = async (data: z.infer<typeof returnSchema>) => {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
 
     try {
-      const itemsWithDetails: ItemWithDetails[] = data.items
-        .map((item): ItemWithDetails | null => {
+      const itemsWithDetails: ActionReturnItem[] = data.items
+        .map((item): ActionReturnItem | null => {
           const product = availableProducts.find(p => p.id === item.selectedProduct)
-          if (product) {
-            return {
-              productVariationId: item.productVariationId,
-              quantity: item.quantity,
-              reason: item.reason,
-              condition: item.condition,
-              productName: product.name,
-              sku: product.sku,
-            }
+          if (!product) return null
+
+          const variation = item.productVariationId
+            ? product.variations.find(v => v.id === item.productVariationId)
+            : null
+
+          return {
+            productId: product.id,
+            productVariationId: variation?.id,
+            productName: product.name,
+            sku: variation?.sku || product.sku,
+            quantity: item.quantity,
+            reason: item.reason,
+            condition: item.condition,
           }
-          return null
         })
-        .filter((item): item is ItemWithDetails => !!item)
+        .filter((item): item is ActionReturnItem => !!item)
 
       if (itemsWithDetails.length !== data.items.length) {
         setError("Could not find details for all selected items. Please try again.")
