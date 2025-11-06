@@ -37,7 +37,20 @@ const returnItemSchema = z.object({
   selectedAttributes: z.record(z.string()).optional(),
 })
 
-type ReturnFormData = z.infer<typeof returnSchema>
+const baseReturnSchema = z.object({
+  customerName: z.string().min(1, "Name is required"),
+  customerEmail: z.string().email("Invalid email address"),
+  customerPhone: z.string().optional(),
+  description: z.string().min(10, "Please provide at least 10 characters."),
+  preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
+  images: z.array(z.string()).optional(),
+})
+
+const returnSchemaForType = baseReturnSchema.extend({
+  items: z.array(returnItemSchema).min(1),
+})
+
+type ReturnFormData = z.infer<typeof returnSchemaForType>
 
 interface ReturnFormProps {
   availableProducts: Product[]
@@ -211,15 +224,6 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
   )
 }
 
-const baseReturnSchema = z.object({
-  customerName: z.string().min(1, "Name is required"),
-  customerEmail: z.string().email("Invalid email address"),
-  customerPhone: z.string().optional(),
-  description: z.string().min(10, "Please provide at least 10 characters."),
-  preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  images: z.array(z.string()).optional(),
-})
-
 export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
@@ -249,7 +253,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     formState: { errors },
     control,
     setValue,
-  } = useForm<z.infer<typeof returnSchema>>({
+  } = useForm<ReturnFormData>({
     resolver: zodResolver(returnSchema),
     defaultValues: {
       items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" }],
@@ -259,7 +263,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" })
 
-  const onSubmit = async (data: z.infer<typeof returnSchema>) => {
+  const onSubmit = async (data: ReturnFormData) => {
     setIsLoading(true)
     setError(null)
     setSuccess(null)
