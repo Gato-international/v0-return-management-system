@@ -263,7 +263,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         </Alert>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4" id="tour-contact-info">
         <h3 className="text-lg font-semibold">Contact Information</h3>
         <div className="space-y-2">
           <Label htmlFor="customerName">Full Name *</Label>
@@ -281,7 +281,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4" id="tour-return-details">
         <h3 className="text-lg font-semibold">Return Details</h3>
         <div className="space-y-2">
           <Label htmlFor="description">Description *</Label>
@@ -302,7 +302,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4" id="tour-items-section">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Items to Return</h3>
           <Button type="button" variant="outline" size="sm" onClick={() => append({ productVariationId: "", quantity: 1, reason: "DEFECTIVE" })}>
@@ -324,7 +324,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         {errors.items && <p className="text-sm text-destructive">{errors.items.message}</p>}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4" id="tour-image-upload">
         <h3 className="text-lg font-semibold">Product Images (Optional)</h3>
         <ImageUpload
           images={images}
@@ -333,7 +333,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+      <Button type="submit" className="w-full" size="lg" disabled={isLoading} id="tour-submit-button">
         {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : null}
         Submit Return Request
       </Button>
