@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Edit, Trash2, Settings } from "lucide-react"
+import { Search, Trash2 } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,8 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { ProductForm } from "./product-form"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { deleteProductAction } from "@/app/actions/products"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
@@ -43,8 +41,6 @@ export function ProductsTable({ products, allAttributes }: ProductsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [productToEdit, setProductToEdit] = useState<Product | null>(null)
   const { toast } = useToast()
 
   const filteredProducts = products.filter((product) => {
@@ -80,16 +76,6 @@ export function ProductsTable({ products, allAttributes }: ProductsTableProps) {
     }
   }
 
-  const handleEditClick = (product: Product) => {
-    setProductToEdit(product)
-    setIsEditDialogOpen(true)
-  }
-
-  const handleEditSuccess = () => {
-    setIsEditDialogOpen(false)
-    setProductToEdit(null)
-  }
-
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -121,20 +107,14 @@ export function ProductsTable({ products, allAttributes }: ProductsTableProps) {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/admin/products/${product.id}`} className="hover:underline">
+                      {product.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>{product.sku}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/products/${product.id}`}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Manage Variations
-                        </Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(product)}>
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(product.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                         <span className="sr-only">Delete</span>
@@ -164,15 +144,6 @@ export function ProductsTable({ products, allAttributes }: ProductsTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-          </DialogHeader>
-          {productToEdit && <ProductForm initialData={productToEdit} allAttributes={allAttributes} onSuccess={handleEditSuccess} />}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

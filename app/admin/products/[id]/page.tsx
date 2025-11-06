@@ -7,51 +7,33 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { VariationForm } from "@/components/admin/variation-form"
 import { VariationsTable } from "@/components/admin/variations-table"
+import { ProductForm } from "@/components/admin/product-form"
+import { getAttributesWithOptions } from "@/app/actions/attributes"
 
 interface PageProps {
   params: any
 }
 
-export default async function ManageProductVariationsPage({ params }: PageProps) {
+export default async function EditProductPage({ params }: PageProps) {
   await requireAuth()
   const resolvedParams = await params
   const { id } = resolvedParams
   const supabase = createAdminClient()
 
-  // Step 1: Fetch the product and its linked attribute IDs
   const { data: product, error: productError } = await supabase
     .from("products")
-    .select(`
-      *,
-      variations:product_variations(*),
-      attributes:product_to_variation_attributes(attribute_id)
-    `)
+    .select("*, variations:product_variations(*), attributes:product_to_variation_attributes(attribute_id)")
     .eq("id", id)
     .single()
 
   if (productError || !product) {
-    console.error("Error fetching product for variations page:", productError)
     notFound()
   }
 
+  const { attributes: allAttributes } = await getAttributesWithOptions()
+
   const attributeIds = product.attributes.map((a: any) => a.attribute_id)
-  let productAttributes: any[] = []
-
-  // Step 2: If there are linked attributes, fetch their full details
-  if (attributeIds.length > 0) {
-    const { data: attributes, error: attributesError } = await supabase
-      .from("variation_attributes")
-      .select("*, options:variation_options(*)")
-      .in("id", attributeIds)
-      .order("name")
-
-    if (attributesError) {
-      console.error("Error fetching product attributes:", attributesError)
-      // Fallback to empty array, form will be empty but page won't crash
-    } else {
-      productAttributes = attributes || []
-    }
-  }
+  const productAttributes = allAttributes?.filter(attr => attributeIds.includes(attr.id)) || []
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -63,7 +45,7 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
             </Link>
           </Button>
           <div>
-            <h1 className="text-xl font-bold">Manage Variations</h1>
+            <h1 className="text-xl font-bold">Edit Product</h1>
             <p className="text-sm text-muted-foreground">
               {product.name} (SKU: {product.sku})
             </p>
@@ -72,25 +54,22 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
       </header>
 
       <main className="container mx-auto px-4 py-8 grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>Add New Variation</CardTitle>
-              <CardDescription>Create a new variant for this product.</CardDescription>
+              <CardTitle>Product Details</CardTitle>
+              <CardDescription>Edit name, SKU, and link variation attributes.</CardDescription>
             </CardHeader>
             <CardContent>
-              <VariationForm
-                productId={product.id}
-                productAttributes={productAttributes}
-              />
+              <ProductForm initialData={product} allAttributes={allAttributes || []} />
             </CardContent>
           </Card>
         </div>
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>Existing Variations</CardTitle>
-              <CardDescription>Edit or delete existing variations.</CardDescription>
+              <CardTitle>Product Variations</CardTitle>
+              <CardDescription>Manage the specific variations for this product.</CardDescription>
             </CardHeader>
             <CardContent>
               <VariationsTable
@@ -98,6 +77,21 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
                 variations={product.variations || []}
                 productAttributes={productAttributes}
               />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Variation</CardTitle>
+              <CardDescription>Create a new variant using the linked attributes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {productAttributes.length > 0 ? (
+                <VariationForm productId={product.id} productAttributes={productAttributes} />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  This product has no variation attributes linked. Edit the product details to add attributes before creating variations.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
