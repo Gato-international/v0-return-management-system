@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
+import { NextIntlClientProvider, useMessages } from "next-intl"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -20,15 +21,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params: { locale },
 }: Readonly<{
   children: React.ReactNode
+  params: { locale: string }
 }>) {
+  const messages = useMessages()
+
   return (
-    <html lang="en" className={playfairDisplay.variable}>
+    <html lang={locale} className={playfairDisplay.variable}>
       <body className={`font-sans antialiased`}>
-        {children}
-        <Toaster />
-        <Analytics />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+          <Toaster />
+          <Analytics />
+        </NextIntlClientProvider>
       </body>
     </html>
   )

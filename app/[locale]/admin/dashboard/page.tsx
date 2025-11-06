@@ -5,9 +5,12 @@ import { logoutAction } from "@/app/actions/auth"
 import { Package, Clock, CheckCircle, XCircle, Box } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
+import { LocaleSwitcher } from "@/components/locale-switcher"
 
 export default async function DashboardPage() {
   const user = await requireAuth()
+  const t = useTranslations("DashboardPage")
 
   const supabase = await createClient()
 
@@ -25,14 +28,17 @@ export default async function DashboardPage() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Welcome back, {user.name || user.email}</p>
+            <h1 className="text-2xl font-bold">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("welcome", { name: user.name || user.email })}</p>
           </div>
-          <form action={logoutAction}>
-            <Button variant="outline" type="submit">
-              Logout
-            </Button>
-          </form>
+          <div className="flex items-center gap-4">
+            <LocaleSwitcher />
+            <form action={logoutAction}>
+              <Button variant="outline" type="submit">
+                {t("logout")}
+              </Button>
+            </form>
+          </div>
         </div>
       </header>
 
@@ -41,71 +47,71 @@ export default async function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Returns</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("totalReturns")}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalReturns.count || 0}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
+              <p className="text-xs text-muted-foreground">{t("allTime")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("pendingReview")}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pendingReturns.count || 0}</div>
-              <p className="text-xs text-muted-foreground">Awaiting action</p>
+              <p className="text-xs text-muted-foreground">{t("awaitingAction")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("approved")}</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{approvedReturns.count || 0}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <p className="text-xs text-muted-foreground">{t("thisMonth")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("rejected")}</CardTitle>
               <XCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{rejectedReturns.count || 0}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <p className="text-xs text-muted-foreground">{t("thisMonth")}</p>
             </CardContent>
           </Card>
         </div>
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+            <CardTitle>{t("quickActions")}</CardTitle>
+            <CardDescription>{t("quickActionsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <Link href="/admin/returns">
               <Button className="w-full justify-start bg-transparent" variant="outline">
                 <Package className="mr-2 h-4 w-4" />
-                View All Returns
+                {t("viewAllReturns")}
               </Button>
             </Link>
             <Link href="/admin/returns?status=pending">
               <Button className="w-full justify-start bg-transparent" variant="outline">
                 <Clock className="mr-2 h-4 w-4" />
-                Pending Reviews
+                {t("pendingReviews")}
               </Button>
             </Link>
             <Link href="/admin/products">
               <Button className="w-full justify-start bg-transparent" variant="outline">
                 <Box className="mr-2 h-4 w-4" />
-                Manage Products
+                {t("manageProducts")}
               </Button>
             </Link>
           </CardContent>

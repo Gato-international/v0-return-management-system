@@ -8,6 +8,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ReturnFormTour } from "@/components/returns/return-form-tour"
 import type { CallBackProps } from "react-joyride"
+import { useTranslations } from "next-intl"
+import { LocaleSwitcher } from "@/components/locale-switcher"
 
 interface Product {
   id: string
@@ -22,6 +24,7 @@ interface CreateReturnClientPageProps {
 
 export function CreateReturnClientPage({ products }: CreateReturnClientPageProps) {
   const [runTour, setRunTour] = useState(false)
+  const t = useTranslations("CreateReturnPage")
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data
@@ -41,16 +44,17 @@ export function CreateReturnClientPage({ products }: CreateReturnClientPageProps
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Package className="h-6 w-6" />
-              <h1 className="text-xl font-semibold">ReturnHub</h1>
+              <h1 className="text-xl font-semibold">{t("header")}</h1>
             </Link>
             <div className="flex items-center gap-2">
+              <LocaleSwitcher />
               <Button variant="outline" size="sm" onClick={() => setRunTour(true)}>
                 <HelpCircle className="h-4 w-4 mr-2" />
-                Take a Tour
+                {t("takeTour")}
               </Button>
               <Link href="/returns/track">
                 <Button variant="ghost" size="sm">
-                  Track Return
+                  {t("trackReturn")}
                 </Button>
               </Link>
             </div>
@@ -61,10 +65,8 @@ export function CreateReturnClientPage({ products }: CreateReturnClientPageProps
         <main className="container mx-auto px-4 py-8 max-w-3xl">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Submit a Return Request</CardTitle>
-              <CardDescription>
-                Fill out the form below to start your return. You'll receive a tracking number via email.
-              </CardDescription>
+              <CardTitle className="text-2xl">{t("title")}</CardTitle>
+              <CardDescription>{t("description")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ReturnForm availableProducts={products || []} />

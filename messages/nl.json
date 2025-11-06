@@ -1,0 +1,299 @@
+{
+  "LocaleSwitcher": {
+    "label": "Verander taal",
+    "en": "English",
+    "nl": "Nederlands"
+  },
+  "HomePage": {
+    "title": "Officiële Gato-international <br /> Retourportaal",
+    "startReturn": "Start een retourzending",
+    "trackReturn": "Retourzending volgen",
+    "adminLogin": "Admin Login",
+    "footer": {
+      "copyright": "© 2025 Gato-international B.V. Alle rechten voorbehouden.",
+      "policy": "Retourbeleid",
+      "contact": "Neem contact op"
+    }
+  },
+  "CreateReturnPage": {
+    "title": "Dien een retourverzoek in",
+    "description": "Vul het onderstaande formulier in om uw retourzending te starten. U ontvangt een trackingnummer via e-mail.",
+    "takeTour": "Neem een rondleiding",
+    "trackReturn": "Retourzending volgen",
+    "header": "RetourHub"
+  },
+  "TrackReturnPage": {
+    "title": "Volg uw retourzending",
+    "description": "Voer uw trackingnummer voor de retourzending in om de status van uw retourverzoek te bekijken.",
+    "startReturn": "Start een retourzending",
+    "header": "RetourHub"
+  },
+  "ReturnForm": {
+    "contactInfo": "Contactgegevens",
+    "fullName": "Volledige naam *",
+    "email": "E-mailadres *",
+    "phone": "Telefoonnummer (optioneel)",
+    "returnDetails": "Retourdetails",
+    "description": "Beschrijving *",
+    "preferredResolution": "Voorkeursoplossing *",
+    "selectPreference": "Selecteer uw voorkeur",
+    "refund": "Terugbetaling",
+    "exchange": "Omruiling",
+    "storeCredit": "Winkeltegoed",
+    "itemsToReturn": "Te retourneren artikelen",
+    "addItem": "Artikel toevoegen",
+    "productImages": "Productafbeeldingen (optioneel)",
+    "submitButton": "Retourverzoek indienen",
+    "successMessage": "Retourzending ingediend! Uw trackingnummer is: {returnNumber}",
+    "errorMessage": "Er is een onverwachte fout opgetreden.",
+    "itemCard": {
+      "item": "Artikel {index}",
+      "product": "Product *",
+      "selectProduct": "Selecteer product",
+      "color": "Kleur *",
+      "selectColor": "Selecteer kleur",
+      "size": "Maat *",
+      "selectSize": "Selecteer maat",
+      "quantity": "Aantal *",
+      "reason": "Reden voor retour *",
+      "selectReason": "Selecteer reden",
+      "reasons": {
+        "defective": "Defect/Beschadigd",
+        "wrongItem": "Verkeerd artikel ontvangen",
+        "changedMind": "Van gedachten veranderd",
+        "notAsDescribed": "Niet zoals beschreven",
+        "other": "Anders"
+      }
+    }
+  },
+  "TrackReturnForm": {
+    "returnNumberLabel": "Trackingnummer retourzending",
+    "returnNumberPlaceholder": "bijv. RET-000006",
+    "returnNumberDescription": "Voer het volledige trackingnummer uit uw bevestigingsmail in.",
+    "emailLabel": "Uw e-mailadres",
+    "emailPlaceholder": "u@voorbeeld.com",
+    "submitButton": "Retourzending volgen",
+    "trackingButton": "Bezig met volgen...",
+    "invalidFormatError": "Ongeldig formaat. Gebruik het formaat RET-000001."
+  },
+  "ReturnDetails": {
+    "backToSearch": "Terug naar zoeken",
+    "returnTitle": "Retour #{returnNumber}",
+    "order": "Bestelling: {orderNumber}",
+    "submittedOn": "Ingediend op {date}",
+    "items": "Artikelen",
+    "sku": "SKU: {sku}",
+    "variation": "Variant: {variation}",
+    "condition": "Staat: {condition}",
+    "quantity": "Aantal: {quantity}",
+    "reason": "Reden: {reason}",
+    "returnDetails": "Retourdetails",
+    "description": "Beschrijving",
+    "preferredResolution": "Voorkeursoplossing",
+    "statusHistory": "Statusgeschiedenis",
+    "at": "om",
+    "uploadedImages": "Geüploade afbeeldingen",
+    "status": {
+      "pending": "In afwachting van beoordeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "received": "Artikelen ontvangen",
+      "inspecting": "Wordt geïnspecteerd",
+      "refund_issued": "Terugbetaling uitgevoerd",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd"
+    }
+  },
+  "LoginPage": {
+    "title": "Admin Login",
+    "description": "Voer uw gegevens in om toegang te krijgen tot het admin dashboard",
+    "emailLabel": "E-mail",
+    "passwordLabel": "Wachtwoord",
+    "signInButton": "Inloggen",
+    "signingInButton": "Inloggen...",
+    "defaultCredentials": "Standaardgegevens: admin@company.com / Admin123!"
+  },
+  "DashboardPage": {
+    "title": "Admin Dashboard",
+    "welcome": "Welkom terug, {name}",
+    "logout": "Uitloggen",
+    "totalReturns": "Totaal retourzendingen",
+    "allTime": "Totaal",
+    "pendingReview": "In afwachting van beoordeling",
+    "awaitingAction": "Wacht op actie",
+    "approved": "Goedgekeurd",
+    "thisMonth": "Deze maand",
+    "rejected": "Afgewezen",
+    "quickActions": "Snelle acties",
+    "quickActionsDesc": "Veelvoorkomende administratieve taken",
+    "viewAllReturns": "Bekijk alle retourzendingen",
+    "pendingReviews": "Openstaande beoordelingen",
+    "manageProducts": "Producten beheren"
+  },
+  "AdminReturnsPage": {
+    "title": "Retourbeheer",
+    "description": "Beheer en beoordeel retourverzoeken van klanten",
+    "allReturns": "Alle retourzendingen",
+    "showingStatus": "Toont {status} retourzendingen",
+    "dashboard": "Dashboard",
+    "returnsList": "Retourlijst",
+    "logout": "Uitloggen"
+  },
+  "ReturnsTable": {
+    "searchPlaceholder": "Zoek op retournummer, e-mail of bestelling...",
+    "filterStatusPlaceholder": "Filter op status",
+    "allStatuses": "Alle statussen",
+    "noReturnsFound": "Geen retourzendingen gevonden",
+    "showingCount": "Toont {count} van {total} retourzendingen",
+    "headers": {
+      "returnNumber": "Retournummer",
+      "customer": "Klant",
+      "order": "Bestelling",
+      "items": "Artikelen",
+      "status": "Status",
+      "date": "Datum",
+      "actions": "Acties"
+    },
+    "viewAction": "Bekijken"
+  },
+  "AdminProductsPage": {
+    "title": "Productbeheer",
+    "description": "Beheer producten die beschikbaar zijn voor retourverzoeken",
+    "dashboard": "Dashboard",
+    "productList": "Productlijst",
+    "productListDesc": "Alle producten beschikbaar voor retourverzoeken",
+    "addProduct": "Product toevoegen",
+    "createProductTitle": "Nieuw product aanmaken",
+    "logout": "Uitloggen"
+  },
+  "ProductsTable": {
+    "searchPlaceholder": "Zoek producten op naam of SKU...",
+    "noProductsFound": "Geen producten gevonden",
+    "showingCount": "Toont {count} van {total} producten",
+    "headers": {
+      "productName": "Productnaam",
+      "sku": "SKU",
+      "actions": "Acties"
+    },
+    "manageVariations": "Varianten beheren",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "deleteDialog": {
+      "title": "Weet u het zeker?",
+      "description": "Dit zal het product permanent verwijderen.",
+      "cancel": "Annuleren",
+      "delete": "Verwijderen"
+    },
+    "editDialogTitle": "Product bewerken"
+  },
+  "ProductForm": {
+    "nameLabel": "Productnaam *",
+    "skuLabel": "SKU *",
+    "createButton": "Product aanmaken",
+    "updateButton": "Product bijwerken",
+    "creatingButton": "Aanmaken...",
+    "savingButton": "Opslaan...",
+    "successToast": "Product is succesvol {action}.",
+    "created": "aangemaakt",
+    "updated": "bijgewerkt"
+  },
+  "ManageVariationsPage": {
+    "title": "Varianten beheren",
+    "description": "{productName} (SKU: {productSku})",
+    "addNewVariation": "Nieuwe variant toevoegen",
+    "addNewVariationDesc": "Maak een nieuwe kleur, maat of andere variant voor dit product.",
+    "existingVariations": "Bestaande varianten",
+    "existingVariationsDesc": "Bewerk of verwijder bestaande varianten."
+  },
+  "VariationsTable": {
+    "noVariationsFound": "Geen varianten gevonden.",
+    "headers": {
+      "sku": "SKU",
+      "color": "Kleur",
+      "size": "Maat",
+      "actions": "Acties"
+    },
+    "deleteDialog": {
+      "title": "Weet u het zeker?",
+      "description": "Dit zal de productvariant permanent verwijderen.",
+      "cancel": "Annuleren",
+      "delete": "Verwijderen"
+    },
+    "editDialogTitle": "Variant bewerken"
+  },
+  "VariationForm": {
+    "skuLabel": "Variant SKU *",
+    "colorLabel": "Kleur",
+    "sizeLabel": "Maat",
+    "createButton": "Variant aanmaken",
+    "updateButton": "Variant bijwerken",
+    "successToast": "Variant is succesvol {action}."
+  },
+  "ReturnDetailPage": {
+    "back": "Terug",
+    "title": "Retour #{returnNumber}",
+    "order": "Bestelling: {orderNumber}",
+    "logout": "Uitloggen",
+    "returnInfo": "Retourinformatie",
+    "items": "Artikelen",
+    "returnDetails": "Retourdetails",
+    "description": "Beschrijving",
+    "orderDate": "Besteldatum",
+    "preferredResolution": "Voorkeursoplossing",
+    "productImages": "Productafbeeldingen",
+    "internalNotes": "Interne notities",
+    "internalNotesDesc": "Alleen zichtbaar voor beheerders",
+    "moreActions": "Meer acties",
+    "statusHistory": "Statusgeschiedenis"
+  },
+  "ReturnActions": {
+    "updateStatus": "Status bijwerken",
+    "updateStatusDesc": "Wijzig de retourstatus en voeg notities toe",
+    "newStatus": "Nieuwe status",
+    "notesLabel": "Notities (optioneel)",
+    "notesPlaceholder": "Voeg notities toe over deze statuswijziging...",
+    "updateButton": "Status bijwerken",
+    "updatingButton": "Bijwerken...",
+    "addInternalNote": "Interne notitie toevoegen",
+    "addInternalNoteDesc": "Notities zijn alleen zichtbaar voor beheerders",
+    "noteLabel": "Notitie",
+    "notePlaceholder": "Voeg een interne notitie toe...",
+    "addButton": "Notitie toevoegen",
+    "addingButton": "Toevoegen...",
+    "successUpdate": "Status succesvol bijgewerkt",
+    "successNote": "Notitie succesvol toegevoegd"
+  },
+  "PrintReturnButton": {
+    "print": "Document afdrukken"
+  },
+  "DeleteReturnButton": {
+    "delete": "Retourzending verwijderen",
+    "dialogTitle": "Weet u het absoluut zeker?",
+    "dialogDescription": "Deze actie kan niet ongedaan worden gemaakt. Dit zal dit retourverzoek en alle bijbehorende gegevens permanent verwijderen.",
+    "cancel": "Annuleren",
+    "confirm": "Verwijderen bevestigen",
+    "deleting": "Verwijderen...",
+    "successToast": "Retourverzoek succesvol verwijderd."
+  },
+  "ContactPage": {
+    "title": "Neem contact op",
+    "description": "Als u vragen heeft, neem dan contact met ons op.",
+    "placeholder": "Dit is een placeholder-pagina voor contactgegevens."
+  },
+  "PolicyPage": {
+    "title": "Retourbeleid",
+    "description": "Details van ons retourbeleid.",
+    "placeholder": "Dit is een placeholder-pagina voor het retourbeleid."
+  },
+  "ImageUpload": {
+    "upload": "Afbeelding uploaden",
+    "uploading": "Uploaden...",
+    "limit": "{count} / {max} afbeeldingen"
+  },
+  "General": {
+    "success": "Succes",
+    "error": "Fout",
+    "unexpectedError": "Er is een onverwachte fout opgetreden.",
+    "na": "N.v.t."
+  }
+}
