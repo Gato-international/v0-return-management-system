@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
-  attributeIds: z.array(z.string().uuid()).optional().default([]),
+  attributeIds: z.array(z.string().uuid()).default([]),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
