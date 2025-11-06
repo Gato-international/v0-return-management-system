@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 const productSchema = z.object({
   name: z.string().min(2, "Product name must be at least 2 characters long."),
   sku: z.string().min(1, "SKU is required.").regex(/^[A-Z0-9-]+$/, "SKU must be uppercase letters, numbers, or hyphens."),
-  attributeIds: z.array(z.string().uuid()).default([]),
+  attributeIds: z.array(z.string().uuid()),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -129,11 +129,11 @@ export function ProductForm({ initialData, allAttributes, onSuccess }: ProductFo
                     <div key={attr.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`attr-${attr.id}`}
-                        checked={field.value?.includes(attr.id)}
+                        checked={field.value.includes(attr.id)}
                         onCheckedChange={(checked) => {
                           return checked
-                            ? field.onChange([...(field.value || []), attr.id])
-                            : field.onChange(field.value?.filter((value) => value !== attr.id));
+                            ? field.onChange([...field.value, attr.id])
+                            : field.onChange(field.value.filter((value) => value !== attr.id));
                         }}
                       />
                       <Label htmlFor={`attr-${attr.id}`} className="font-normal">{attr.name}</Label>
