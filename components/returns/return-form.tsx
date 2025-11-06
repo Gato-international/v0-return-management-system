@@ -50,7 +50,6 @@ type ReturnFormData = z.infer<typeof returnSchema>
 
 interface ReturnFormProps {
   availableProducts: Product[]
-  t: (key: string, values?: Record<string, string | number>) => string
 }
 
 type ItemWithDetails = z.infer<typeof returnItemSchema> & {
@@ -66,10 +65,9 @@ interface ReturnItemCardProps {
   errors: FieldErrors<ReturnFormData>
   remove: (index: number) => void
   canRemove: boolean
-  t: (key: string, values?: Record<string, string | number>) => string
 }
 
-function ReturnItemCard({ index, availableProducts, setValue, register, errors, remove, canRemove, t }: ReturnItemCardProps) {
+function ReturnItemCard({ index, availableProducts, setValue, register, errors, remove, canRemove }: ReturnItemCardProps) {
   const [selectedProductId, setSelectedProductId] = useState("")
   const [selectedColor, setSelectedColor] = useState("")
 
@@ -119,7 +117,7 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
     <Card className="p-4">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium">{t("itemCard.item", { index: index + 1 })}</h4>
+          <h4 className="font-medium">Item {index + 1}</h4>
           {canRemove && (
             <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
               <X className="h-4 w-4" />
@@ -128,9 +126,9 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <Label>{t("itemCard.product")}</Label>
+            <Label>Product *</Label>
             <Select onValueChange={handleProductChange}>
-              <SelectTrigger><SelectValue placeholder={t("itemCard.selectProduct")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
               <SelectContent>
                 {availableProducts.map((p: Product) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -139,18 +137,18 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{t("itemCard.color")}</Label>
+            <Label>Color *</Label>
             <Select onValueChange={handleColorChange} disabled={!selectedProductId || availableColors.length === 0}>
-              <SelectTrigger><SelectValue placeholder={t("itemCard.selectColor")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
               <SelectContent>
                 {availableColors.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{t("itemCard.size")}</Label>
+            <Label>Size *</Label>
             <Select onValueChange={handleSizeChange} disabled={!selectedColor || availableSizes.length === 0}>
-              <SelectTrigger><SelectValue placeholder={t("itemCard.selectSize")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select Size" /></SelectTrigger>
               <SelectContent>
                 {availableSizes.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
@@ -161,20 +159,20 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
         
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label>{t("itemCard.quantity")}</Label>
+            <Label>Quantity *</Label>
             <Input type="number" min="1" {...register(`items.${index}.quantity`, { valueAsNumber: true })} />
             {errors.items?.[index]?.quantity && <p className="text-sm text-destructive">{errors.items[index]?.quantity?.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label>{t("itemCard.reason")}</Label>
+            <Label>Reason for Return *</Label>
             <Select onValueChange={(value) => setValue(`items.${index}.reason`, value as any)}>
-              <SelectTrigger><SelectValue placeholder={t("itemCard.selectReason")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select Reason" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="DEFECTIVE">{t("itemCard.reasons.defective")}</SelectItem>
-                <SelectItem value="WRONG_ITEM">{t("itemCard.reasons.wrongItem")}</SelectItem>
-                <SelectItem value="CHANGED_MIND">{t("itemCard.reasons.changedMind")}</SelectItem>
-                <SelectItem value="NOT_AS_DESCRIBED">{t("itemCard.reasons.notAsDescribed")}</SelectItem>
-                <SelectItem value="OTHER">{t("itemCard.reasons.other")}</SelectItem>
+                <SelectItem value="DEFECTIVE">Defective/Damaged</SelectItem>
+                <SelectItem value="WRONG_ITEM">Wrong Item Received</SelectItem>
+                <SelectItem value="CHANGED_MIND">Changed Mind</SelectItem>
+                <SelectItem value="NOT_AS_DESCRIBED">Not as Described</SelectItem>
+                <SelectItem value="OTHER">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,7 +182,7 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
   )
 }
 
-export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
+export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -238,10 +236,10 @@ export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
       if (result.error) {
         setError(result.error)
       } else if (result.returnNumber) {
-        setSuccess(t("successMessage", { returnNumber: result.returnNumber }))
+        setSuccess(`Return submitted! Your tracking number is: ${result.returnNumber}`)
       }
     } catch (err) {
-      setError(t("errorMessage"))
+      setError("An unexpected error occurred.")
     } finally {
       setIsLoading(false)
     }
@@ -266,38 +264,38 @@ export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
       )}
 
       <div className="space-y-4" id="tour-contact-info">
-        <h3 className="text-lg font-semibold">{t("contactInfo")}</h3>
+        <h3 className="text-lg font-semibold">Contact Information</h3>
         <div className="space-y-2">
-          <Label htmlFor="customerName">{t("fullName")}</Label>
+          <Label htmlFor="customerName">Full Name *</Label>
           <Input id="customerName" {...register("customerName")} />
           {errors.customerName && <p className="text-sm text-destructive">{errors.customerName.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="customerEmail">{t("email")}</Label>
+          <Label htmlFor="customerEmail">Email Address *</Label>
           <Input id="customerEmail" type="email" {...register("customerEmail")} />
           {errors.customerEmail && <p className="text-sm text-destructive">{errors.customerEmail.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="customerPhone">{t("phone")}</Label>
+          <Label htmlFor="customerPhone">Phone Number (optional)</Label>
           <Input id="customerPhone" type="tel" {...register("customerPhone")} />
         </div>
       </div>
 
       <div className="space-y-4" id="tour-return-details">
-        <h3 className="text-lg font-semibold">{t("returnDetails")}</h3>
+        <h3 className="text-lg font-semibold">Return Details</h3>
         <div className="space-y-2">
-          <Label htmlFor="description">{t("description")}</Label>
+          <Label htmlFor="description">Description *</Label>
           <Textarea id="description" rows={4} {...register("description")} />
           {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label>{t("preferredResolution")}</Label>
+          <Label>Preferred Resolution *</Label>
           <Select onValueChange={(value) => setValue("preferredResolution", value as any)}>
-            <SelectTrigger><SelectValue placeholder={t("selectPreference")} /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select your preference" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="REFUND">{t("refund")}</SelectItem>
-              <SelectItem value="EXCHANGE">{t("exchange")}</SelectItem>
-              <SelectItem value="STORE_CREDIT">{t("storeCredit")}</SelectItem>
+              <SelectItem value="REFUND">Refund</SelectItem>
+              <SelectItem value="EXCHANGE">Exchange</SelectItem>
+              <SelectItem value="STORE_CREDIT">Store Credit</SelectItem>
             </SelectContent>
           </Select>
           {errors.preferredResolution && <p className="text-sm text-destructive">{errors.preferredResolution.message}</p>}
@@ -306,9 +304,9 @@ export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
 
       <div className="space-y-4" id="tour-items-section">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{t("itemsToReturn")}</h3>
+          <h3 className="text-lg font-semibold">Items to Return</h3>
           <Button type="button" variant="outline" size="sm" onClick={() => append({ productVariationId: "", quantity: 1, reason: "DEFECTIVE" })}>
-            <Plus className="h-4 w-4 mr-2" /> {t("addItem")}
+            <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
         </div>
         {fields.map((field, index) => (
@@ -321,14 +319,13 @@ export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
             errors={errors}
             remove={remove}
             canRemove={fields.length > 1}
-            t={t}
           />
         ))}
         {errors.items && <p className="text-sm text-destructive">{errors.items.message}</p>}
       </div>
 
       <div className="space-y-4" id="tour-image-upload">
-        <h3 className="text-lg font-semibold">{t("productImages")}</h3>
+        <h3 className="text-lg font-semibold">Product Images (Optional)</h3>
         <ImageUpload
           images={images}
           onUpload={(url) => setImages(prev => [...prev, url])}
@@ -338,7 +335,7 @@ export function ReturnForm({ availableProducts, t }: ReturnFormProps) {
 
       <Button type="submit" className="w-full" size="lg" disabled={isLoading} id="tour-submit-button">
         {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : null}
-        {t("submitButton")}
+        Submit Return Request
       </Button>
     </form>
   )

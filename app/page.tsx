@@ -1,12 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Package, Search, Shield } from "lucide-react"
-import { getTranslations } from "next-intl/server"
-import { LocaleSwitcher } from "@/components/locale-switcher"
 
 export default async function HomePage() {
-  const t = await getTranslations("HomePage")
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Content */}
@@ -19,11 +15,10 @@ export default async function HomePage() {
               <h1 className="text-xl font-semibold">GATO-INTERNATIONAL</h1>
             </div>
             <div className="flex items-center gap-4">
-              <LocaleSwitcher />
               <Link href="/admin/login">
                 <Button variant="ghost" size="sm">
                   <Shield className="h-4 w-4 mr-2" />
-                  {t("adminLogin")}
+                  Admin Login
                 </Button>
               </Link>
             </div>
@@ -35,19 +30,19 @@ export default async function HomePage() {
           <div className="container mx-auto px-4 text-center space-y-6">
             <h2
               className="text-4xl md:text-5xl font-bold tracking-tight text-balance font-display"
-              dangerouslySetInnerHTML={{ __html: t.raw("title") }}
+              dangerouslySetInnerHTML={{ __html: "Official Gato-international <br /> Return portal" }}
             />
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link href="/returns/create">
                 <Button size="lg" className="w-full sm:w-auto">
                   <Package className="h-5 w-5 mr-2" />
-                  {t("startReturn")}
+                  Start a Return
                 </Button>
               </Link>
               <Link href="/returns/track">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   <Search className="h-5 w-5 mr-2" />
-                  {t("trackReturn")}
+                  Track Return
                 </Button>
               </Link>
             </div>
@@ -58,13 +53,13 @@ export default async function HomePage() {
         <footer className="border-t border-border bg-muted/50 mt-auto">
           <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-              <p>{t("footer.copyright")}</p>
+              <p>© 2025 Gato-international B.V. All rights reserved.</p>
               <div className="flex gap-6">
                 <Link href="/returns/policy" className="hover:text-primary transition-colors">
-                  {t("footer.policy")}
+                  Return Policy
                 </Link>
                 <Link href="/contact" className="hover:text-primary transition-colors">
-                  {t("footer.contact")}
+                  Contact Us
                 </Link>
               </div>
             </div>

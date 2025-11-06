@@ -3,9 +3,7 @@ import type { Metadata } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from "@/components/ui/toaster"
-import "../globals.css"
-import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages } from "next-intl/server"
+import "./globals.css"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,22 +21,17 @@ export const metadata: Metadata = {
   description: "Professional B2B return management platform",
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const locale = await getLocale()
-  const messages = await getMessages()
-
   return (
-    <html lang={locale} className={`${inter.variable} ${playfairDisplay.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body className={`font-sans antialiased`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-          <Toaster />
-          <Analytics />
-        </NextIntlClientProvider>
+        {children}
+        <Toaster />
+        <Analytics />
       </body>
     </html>
   )

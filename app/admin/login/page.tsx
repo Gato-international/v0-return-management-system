@@ -3,7 +3,6 @@ import { LoginForm } from "@/components/auth/login-form"
 import { Shield } from "lucide-react"
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
 
 export default async function LoginPage() {
   // Redirect if already logged in
@@ -11,8 +10,6 @@ export default async function LoginPage() {
   if (session) {
     redirect("/admin/dashboard")
   }
-
-  const t = await getTranslations("LoginPage")
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -23,8 +20,8 @@ export default async function LoginPage() {
               <Shield className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">{t("title")}</CardTitle>
-          <CardDescription>{t("description")}</CardDescription>
+          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <CardDescription>Enter your credentials to access the admin dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />

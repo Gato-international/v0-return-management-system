@@ -1,12 +1,9 @@
-import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Package } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default async function ContactPage() {
-  const t = await getTranslations("ContactPage")
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -23,11 +20,11 @@ export default async function ContactPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{t("title")}</CardTitle>
-            <CardDescription>{t("description")}</CardDescription>
+            <CardTitle className="text-2xl">Contact Us</CardTitle>
+            <CardDescription>If you have any questions, please reach out to us.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>{t("placeholder")}</p>
+            <p>This is a placeholder page for contact information.</p>
           </CardContent>
         </Card>
       </main>
