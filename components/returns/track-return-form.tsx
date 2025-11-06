@@ -25,14 +25,18 @@ export function TrackReturnForm() {
     setError(null)
     setReturnData(null)
 
-    if (!/^\d+$/.test(returnNumber)) {
-      setError("Please enter a valid numerical tracking number.")
+    const upperCaseReturnNumber = returnNumber.trim().toUpperCase()
+
+    if (!/^RET-\d+$/.test(upperCaseReturnNumber)) {
+      setError("Invalid format. Please use the format RET-000001.")
       setIsLoading(false)
       return
     }
 
+    const numericPart = upperCaseReturnNumber.replace("RET-", "")
+
     try {
-      const result = await trackReturnAction(returnNumber, email)
+      const result = await trackReturnAction(numericPart, email)
       if (result.error) {
         setError(result.error)
       } else if (result.return) {
@@ -62,15 +66,13 @@ export function TrackReturnForm() {
         <Label htmlFor="returnNumber">Return Tracking Number</Label>
         <Input
           id="returnNumber"
-          placeholder="e.g., 1001"
+          placeholder="e.g., RET-000006"
           value={returnNumber}
           onChange={(e) => setReturnNumber(e.target.value)}
           disabled={isLoading}
           required
-          inputMode="numeric"
-          pattern="[0-9]*"
         />
-        <p className="text-sm text-muted-foreground">Enter the numerical tracking number from your confirmation email</p>
+        <p className="text-sm text-muted-foreground">Enter the full tracking number from your confirmation email.</p>
       </div>
 
       <div className="space-y-2">
