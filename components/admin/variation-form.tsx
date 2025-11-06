@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -10,10 +12,6 @@ import { useToast } from "@/hooks/use-toast"
 import { AlertCircle } from "lucide-react"
 import { createVariationAction, updateVariationAction } from "@/app/actions/variations"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-interface VariationFormData {
-  attributes: Record<string, string>
-}
 
 interface Option {
   id: string
@@ -35,6 +33,19 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
   const { toast } = useToast()
   const isEditMode = !!initialData
 
+  const variationSchema = useMemo(() => {
+    const attributesShape = productAttributes.reduce((shape, attr) => {
+      shape[attr.name] = z.string().min(1, `Please select a ${attr.name}.`);
+      return shape;
+    }, {} as Record<string, z.ZodString>);
+
+    return z.object({
+      attributes: z.object(attributesShape),
+    });
+  }, [productAttributes]);
+
+  type VariationFormData = z.infer<typeof variationSchema>;
+
   const {
     handleSubmit,
     reset,
@@ -42,6 +53,7 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
     control,
     formState: { errors, isSubmitting },
   } = useForm<VariationFormData>({
+    resolver: zodResolver(variationSchema),
     defaultValues: {
       attributes: initialData?.attributes || {},
     },
@@ -49,7 +61,7 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
 
   useEffect(() => {
     reset({ attributes: initialData?.attributes || {} })
-  }, [initialData, reset])
+  }, [initialData, reset, productAttributes])
 
   const onSubmit = async (data: VariationFormData) => {
     try {
@@ -63,7 +75,7 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
           description: `Variation has been successfully ${isEditMode ? "updated" : "created"}.`,
         })
         onSuccess?.()
-        if (!isEditMode) reset()
+        if (!isEditMode) reset({ attributes: {} })
       } else if (result.error) {
         setError("root.serverError", {
           type: "server",
@@ -89,11 +101,11 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
 
       {productAttributes.map(attr => (
         <div key={attr.id} className="space-y-2">
-          <Label>{attr.name}</Label>
+          <Label>{attr.name} *</Label>
           <Controller
             name={`attributes.${attr.name}`}
             control={control}
-            defaultValue={initialData?.attributes?.[attr.name] || ""}
+            defaultValue=""
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger>
@@ -107,10 +119,15 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
               </Select>
             )}
           />
+          {errors.attributes?.[attr.name as keyof typeof errors.attributes] && (
+            <p className="text-sm text-destructive mt-1">
+              {errors.attributes[attr.name as keyof typeof errors.attributes]?.message}
+            </p>
+          )}
         </div>
       ))}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" className="w-full" disabled={isSubmitting || productAttributes.length === 0}>
         {isSubmitting ? <Spinner className="mr-2 h-4 w-4" /> : null}
         {isEditMode ? "Update Variation" : "Create Variation"}
       </Button>
