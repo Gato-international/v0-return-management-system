@@ -124,6 +124,9 @@
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
   .day-with-dot {
     @apply relative;
   }
