@@ -130,7 +130,7 @@ export async function trackReturnAction(returnNumber: string, email: string) {
 
     const { data: items } = await supabase
       .from("return_items")
-      .select("*, variation:product_variations(sku, color, size, product:products(name))")
+      .select("*, variation:product_variations(sku, attributes, product:products(name))")
       .eq("return_id", returnRecord.id)
 
     const { data: statusHistory } = await supabase

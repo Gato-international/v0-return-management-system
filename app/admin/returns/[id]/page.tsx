@@ -55,7 +55,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
   const [{ data: items }, { data: statusHistory }, { data: notes }, { data: images }] = await Promise.all([
     supabase
       .from("return_items")
-      .select("*, variation:product_variations(sku, color, size, product:products(name))")
+      .select("*, variation:product_variations(sku, attributes, product:products(name))")
       .eq("return_id", id),
     supabase.from("return_status_history").select("*").eq("return_id", id).order("created_at", { ascending: false }),
     supabase
@@ -145,9 +145,9 @@ export default async function ReturnDetailPage({ params }: PageProps) {
                         <div>
                           <p className="font-medium">{item.variation?.product?.name || item.product_name}</p>
                           <p className="text-sm text-muted-foreground">SKU: {item.variation?.sku || item.sku}</p>
-                          {(item.variation?.color || item.variation?.size) && (
+                          {item.variation?.attributes && (
                             <p className="text-sm text-muted-foreground">
-                              Variation: {[item.variation.color, item.variation.size].filter(Boolean).join(", ")}
+                              Variation: {Object.entries(item.variation.attributes).map(([key, value]) => `${key}: ${value}`).join(", ")}
                             </p>
                           )}
                           {item.condition && <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>}

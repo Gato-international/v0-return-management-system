@@ -21,8 +21,7 @@ import { VariationForm } from "./variation-form"
 
 interface Variation {
   id: string
-  color: string | null
-  size: string | null
+  attributes: Record<string, string>
 }
 interface Attribute {
   id: string
@@ -70,21 +69,25 @@ export function VariationsTable({ productId, variations, productAttributes }: Va
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Color</TableHead>
-              <TableHead>Size</TableHead>
+              {productAttributes.map(attr => (
+                <TableHead key={attr.id}>{attr.name}</TableHead>
+              ))}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {variations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center h-24">No variations found.</TableCell>
+                <TableCell colSpan={productAttributes.length + 1} className="text-center h-24">
+                  No variations found.
+                </TableCell>
               </TableRow>
             ) : (
-              variations.map((variation) => (
+              variations.map(variation => (
                 <TableRow key={variation.id}>
-                  <TableCell>{variation.color || "N/A"}</TableCell>
-                  <TableCell>{variation.size || "N/A"}</TableCell>
+                  {productAttributes.map(attr => (
+                    <TableCell key={attr.id}>{variation.attributes?.[attr.name] || "N/A"}</TableCell>
+                  ))}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEditClick(variation)}>

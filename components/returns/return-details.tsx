@@ -87,9 +87,9 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
                   <div>
                     <p className="font-medium">{item.variation?.product?.name || item.product_name}</p>
                     <p className="text-sm text-muted-foreground">SKU: {item.variation?.sku || item.sku}</p>
-                    {(item.variation?.color || item.variation?.size) && (
+                    {item.variation?.attributes && (
                       <p className="text-sm text-muted-foreground">
-                        Variation: {[item.variation.color, item.variation.size].filter(Boolean).join(", ")}
+                        Variation: {Object.entries(item.variation.attributes).map(([key, value]) => `${key}: ${value}`).join(", ")}
                       </p>
                     )}
                     {item.condition && <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>}

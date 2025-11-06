@@ -1,9 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useForm, Controller } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -13,15 +11,9 @@ import { AlertCircle } from "lucide-react"
 import { createVariationAction, updateVariationAction } from "@/app/actions/variations"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const variationSchema = z.object({
-  color: z.string().optional(),
-  size: z.string().optional(),
-}).refine(data => data.color || data.size, {
-  message: "At least one variation attribute is required.",
-  path: ["_form"],
-})
-
-type VariationFormData = z.infer<typeof variationSchema>
+interface VariationFormData {
+  attributes: Record<string, string>
+}
 
 interface Option {
   id: string
@@ -35,7 +27,7 @@ interface Attribute {
 interface VariationFormProps {
   productId: string
   productAttributes: Attribute[]
-  initialData?: { id: string; color?: string | null; size?: string | null }
+  initialData?: { id: string; attributes: Record<string, string> }
   onSuccess?: () => void
 }
 
@@ -47,25 +39,23 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
     handleSubmit,
     reset,
     setError,
-    setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<VariationFormData>({
-    resolver: zodResolver(variationSchema),
     defaultValues: {
-      color: initialData?.color || "",
-      size: initialData?.size || "",
+      attributes: initialData?.attributes || {},
     },
   })
 
   useEffect(() => {
-    reset(initialData || { color: "", size: "" })
+    reset({ attributes: initialData?.attributes || {} })
   }, [initialData, reset])
 
   const onSubmit = async (data: VariationFormData) => {
     try {
       const result = isEditMode
         ? await updateVariationAction(initialData!.id, productId, data)
-        : await createVariationAction(productId, data)
+        : await createVariationAction({ productId, ...data })
 
       if (result.success) {
         toast({
@@ -75,11 +65,9 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
         onSuccess?.()
         if (!isEditMode) reset()
       } else if (result.error) {
-        Object.entries(result.error).forEach(([key, value]) => {
-          setError(key as keyof VariationFormData | "root.serverError", {
-            type: "server",
-            message: Array.isArray(value) ? value.join(", ") : String(value),
-          })
+        setError("root.serverError", {
+          type: "server",
+          message: result.error._form?.[0] || "An error occurred.",
         })
       }
     } catch (e) {
@@ -98,29 +86,27 @@ export function VariationForm({ productId, productAttributes, initialData, onSuc
           <AlertDescription>{errors.root.serverError.message}</AlertDescription>
         </Alert>
       )}
-      {errors._form && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{errors._form.message}</AlertDescription>
-        </Alert>
-      )}
 
       {productAttributes.map(attr => (
         <div key={attr.id} className="space-y-2">
           <Label>{attr.name}</Label>
-          <Select
-            onValueChange={(value) => setValue(attr.name.toLowerCase() as "color" | "size", value)}
-            defaultValue={isEditMode ? (initialData?.[attr.name.toLowerCase() as "color" | "size"] || "") : ""}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${attr.name}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {attr.options.map(opt => (
-                <SelectItem key={opt.id} value={opt.value}>{opt.value}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name={`attributes.${attr.name}`}
+            control={control}
+            defaultValue={initialData?.attributes?.[attr.name] || ""}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select ${attr.name}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {attr.options.map(opt => (
+                    <SelectItem key={opt.id} value={opt.value}>{opt.value}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       ))}
 

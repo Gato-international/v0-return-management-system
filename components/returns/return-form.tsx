@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useForm, useFieldArray, UseFormSetValue, UseFormRegister, FieldErrors } from "react-hook-form"
+import { useForm, useFieldArray, UseFormSetValue, UseFormRegister, FieldErrors, useWatch, Control } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -18,8 +18,7 @@ import { Textarea } from "../ui/textarea"
 
 interface Variation {
   id: string
-  color?: string | null
-  size?: string | null
+  attributes: Record<string, string>
 }
 interface Product {
   id: string
@@ -33,6 +32,8 @@ const returnItemSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1."),
   reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]),
   condition: z.string().optional(),
+  selectedProduct: z.string().min(1, "Please select a product."),
+  selectedAttributes: z.record(z.string()).optional(),
 })
 
 const returnSchema = z.object({
@@ -51,7 +52,7 @@ interface ReturnFormProps {
   availableProducts: Product[]
 }
 
-type ItemWithDetails = z.infer<typeof returnItemSchema> & {
+type ItemWithDetails = Omit<z.infer<typeof returnItemSchema>, "selectedProduct" | "selectedAttributes"> & {
   productName: string
   sku: string
 }
@@ -59,6 +60,7 @@ type ItemWithDetails = z.infer<typeof returnItemSchema> & {
 interface ReturnItemCardProps {
   index: number
   availableProducts: Product[]
+  control: Control<ReturnFormData>
   setValue: UseFormSetValue<ReturnFormData>
   register: UseFormRegister<ReturnFormData>
   errors: FieldErrors<ReturnFormData>
@@ -66,49 +68,63 @@ interface ReturnItemCardProps {
   canRemove: boolean
 }
 
-function ReturnItemCard({ index, availableProducts, setValue, register, errors, remove, canRemove }: ReturnItemCardProps) {
-  const [selectedProductId, setSelectedProductId] = useState("")
-  const [selectedColor, setSelectedColor] = useState("")
+function ReturnItemCard({ index, availableProducts, control, setValue, register, errors, remove, canRemove }: ReturnItemCardProps) {
+  const selectedProductId = useWatch({ control, name: `items.${index}.selectedProduct` })
+  const selectedAttributes = useWatch({ control, name: `items.${index}.selectedAttributes` }) || {}
 
   const selectedProduct = useMemo(
     () => availableProducts.find((p: Product) => p.id === selectedProductId),
     [selectedProductId, availableProducts]
   )
 
-  const availableColors = useMemo((): string[] => {
+  const productAttributes = useMemo(() => {
     if (!selectedProduct) return []
-    const colors = selectedProduct.variations
-      .map((v: Variation) => v.color)
-      .filter((c: string | null | undefined): c is string => !!c)
-    return [...new Set<string>(colors)]
+    const attributes = new Set<string>()
+    selectedProduct.variations.forEach(v => {
+      Object.keys(v.attributes).forEach(attr => attributes.add(attr))
+    })
+    return Array.from(attributes)
   }, [selectedProduct])
 
-  const availableSizes = useMemo((): string[] => {
-    if (!selectedProduct || !selectedColor) return []
-    const sizes = selectedProduct.variations
-      .filter((v: Variation) => v.color === selectedColor)
-      .map((v: Variation) => v.size)
-      .filter((s: string | null | undefined): s is string => !!s)
-    return [...new Set<string>(sizes)]
-  }, [selectedProduct, selectedColor])
+  const getAvailableOptions = (attributeName: string, currentSelections: Record<string, string>) => {
+    if (!selectedProduct) return []
 
-  const handleProductChange = (productId: string) => {
-    setSelectedProductId(productId)
-    setSelectedColor("")
-    setValue(`items.${index}.productVariationId`, "")
+    const filteredVariations = selectedProduct.variations.filter(variation => {
+      return Object.entries(currentSelections).every(([key, value]) => {
+        return !value || variation.attributes[key] === value
+      })
+    })
+
+    const options = new Set<string>()
+    filteredVariations.forEach(variation => {
+      if (variation.attributes[attributeName]) {
+        options.add(variation.attributes[attributeName])
+      }
+    })
+    return Array.from(options)
   }
 
-  const handleColorChange = (color: string) => {
-    setSelectedColor(color)
-    setValue(`items.${index}.productVariationId`, "")
-  }
+  const handleAttributeChange = (attributeName: string, value: string) => {
+    const newSelections = { ...selectedAttributes, [attributeName]: value }
+    
+    // Reset subsequent attribute selections
+    const attrIndex = productAttributes.indexOf(attributeName)
+    for (let i = attrIndex + 1; i < productAttributes.length; i++) {
+      const subsequentAttr = productAttributes[i]
+      delete newSelections[subsequentAttr]
+    }
 
-  const handleSizeChange = (size: string) => {
-    const variation = selectedProduct?.variations.find(
-      (v: Variation) => v.color === selectedColor && v.size === size
-    )
-    if (variation) {
-      setValue(`items.${index}.productVariationId`, variation.id)
+    setValue(`items.${index}.selectedAttributes`, newSelections)
+    
+    // Check if a full variation is selected
+    const finalVariation = selectedProduct?.variations.find(v => {
+      return productAttributes.every(attr => v.attributes[attr] === newSelections[attr])
+    })
+
+    if (finalVariation) {
+      setValue(`items.${index}.productVariationId`, finalVariation.id)
+    } else {
+      setValue(`items.${index}.productVariationId`, "")
     }
   }
 
@@ -123,37 +139,45 @@ function ReturnItemCard({ index, availableProducts, setValue, register, errors, 
             </Button>
           )}
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Product *</Label>
-            <Select onValueChange={handleProductChange}>
-              <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-              <SelectContent>
-                {availableProducts.map((p: Product) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Color *</Label>
-            <Select onValueChange={handleColorChange} disabled={!selectedProductId || availableColors.length === 0}>
-              <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
-              <SelectContent>
-                {availableColors.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Size *</Label>
-            <Select onValueChange={handleSizeChange} disabled={!selectedColor || availableSizes.length === 0}>
-              <SelectTrigger><SelectValue placeholder="Select Size" /></SelectTrigger>
-              <SelectContent>
-                {availableSizes.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <Label>Product *</Label>
+          <Select onValueChange={(value) => setValue(`items.${index}.selectedProduct`, value)}>
+            <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+            <SelectContent>
+              {availableProducts.map((p: Product) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {productAttributes.map((attrName, attrIndex) => {
+          const currentSelectionsForThisDropdown: Record<string, string> = {}
+          for (let i = 0; i < attrIndex; i++) {
+            const prevAttrName = productAttributes[i]
+            if (selectedAttributes[prevAttrName]) {
+              currentSelectionsForThisDropdown[prevAttrName] = selectedAttributes[prevAttrName]
+            }
+          }
+          const options = getAvailableOptions(attrName, currentSelectionsForThisDropdown)
+          const isEnabled = attrIndex === 0 ? !!selectedProduct : !!selectedAttributes[productAttributes[attrIndex - 1]]
+
+          return (
+            <div key={attrName} className="space-y-2">
+              <Label>{attrName} *</Label>
+              <Select
+                onValueChange={(value) => handleAttributeChange(attrName, value)}
+                value={selectedAttributes[attrName] || ""}
+                disabled={!isEnabled}
+              >
+                <SelectTrigger><SelectValue placeholder={`Select ${attrName}`} /></SelectTrigger>
+                <SelectContent>
+                  {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )
+        })}
         {errors.items?.[index]?.productVariationId && <p className="text-sm text-destructive">{errors.items[index]?.productVariationId?.message}</p>}
         
         <div className="grid gap-4 md:grid-cols-2">
@@ -196,7 +220,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
   } = useForm<ReturnFormData>({
     resolver: zodResolver(returnSchema),
     defaultValues: {
-      items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE" }],
+      items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" }],
       images: [],
     },
   })
@@ -211,14 +235,15 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     try {
       const itemsWithDetails: ItemWithDetails[] = data.items
         .map((item): ItemWithDetails | null => {
-          for (const product of availableProducts) {
-            const variation = product.variations.find(v => v.id === item.productVariationId)
-            if (variation) {
-              return {
-                ...item,
-                productName: product.name,
-                sku: product.sku,
-              }
+          const product = availableProducts.find(p => p.id === item.selectedProduct)
+          if (product) {
+            return {
+              productVariationId: item.productVariationId,
+              quantity: item.quantity,
+              reason: item.reason,
+              condition: item.condition,
+              productName: product.name,
+              sku: product.sku,
             }
           }
           return null
@@ -304,7 +329,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       <div className="space-y-4" id="tour-items-section">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Items to Return</h3>
-          <Button type="button" variant="outline" size="sm" onClick={() => append({ productVariationId: "", quantity: 1, reason: "DEFECTIVE" })}>
+          <Button type="button" variant="outline" size="sm" onClick={() => append({ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" })}>
             <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
         </div>
@@ -313,6 +338,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
             key={field.id}
             index={index}
             availableProducts={availableProducts}
+            control={control}
             setValue={setValue}
             register={register}
             errors={errors}

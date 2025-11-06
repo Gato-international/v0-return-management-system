@@ -5,75 +5,58 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 const variationSchema = z.object({
-  color: z.string().optional(),
-  size: z.string().optional(),
-}).refine(data => data.color || data.size, {
-    message: "At least one variation attribute (color or size) is required.",
-    path: ["_form"],
-});
-
+  productId: z.string().uuid(),
+  attributes: z.record(z.string()).refine(val => Object.values(val).some(v => v), {
+    message: "At least one variation attribute is required.",
+  }),
+})
 
 type VariationFormData = z.infer<typeof variationSchema>
 
-export async function createVariationAction(productId: string, data: VariationFormData) {
-  try {
-    const validation = variationSchema.safeParse(data)
-    if (!validation.success) {
-      return { error: validation.error.flatten().fieldErrors }
+export async function createVariationAction(data: VariationFormData) {
+  const validation = variationSchema.safeParse(data)
+  if (!validation.success) {
+    return { error: { _form: [validation.error.flatten().fieldErrors.attributes?.[0] || "Invalid data."] } }
+  }
+
+  const supabase = createAdminClient()
+  const { error } = await supabase.from("product_variations").insert({
+    product_id: validation.data.productId,
+    attributes: validation.data.attributes,
+  })
+
+  if (error) {
+    console.error("Error creating variation:", error)
+    if (error.message.includes("duplicate key value violates unique constraint")) {
+       return { error: { _form: ["A variation with these attributes already exists."] } }
     }
-
-    const supabase = createAdminClient()
-    const { error } = await supabase.from("product_variations").insert({
-      product_id: productId,
-      color: validation.data.color || null,
-      size: validation.data.size || null,
-    })
-
-    if (error) {
-      if (error.code === "23505") {
-        return { error: { _form: ["A variation with these attributes already exists."] } }
-      }
-      throw error
-    }
-
-    revalidatePath(`/admin/products/${productId}`)
-    return { success: true }
-  } catch (e) {
-    console.error("Error creating variation:", e)
     return { error: { _form: ["An unexpected error occurred."] } }
   }
+
+  revalidatePath(`/admin/products/${validation.data.productId}`)
+  return { success: true }
 }
 
-export async function updateVariationAction(variationId: string, productId: string, data: VariationFormData) {
-  try {
-    const validation = variationSchema.safeParse(data)
-    if (!validation.success) {
-      return { error: validation.error.flatten().fieldErrors }
+export async function updateVariationAction(variationId: string, productId: string, data: { attributes: Record<string, string> }) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from("product_variations")
+    .update({
+      attributes: data.attributes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", variationId)
+
+  if (error) {
+    console.error("Error updating variation:", error)
+    if (error.message.includes("duplicate key value violates unique constraint")) {
+       return { error: { _form: ["A variation with these attributes already exists."] } }
     }
-
-    const supabase = createAdminClient()
-    const { error } = await supabase
-      .from("product_variations")
-      .update({
-        color: validation.data.color || null,
-        size: validation.data.size || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", variationId)
-
-    if (error) {
-      if (error.code === "23505") {
-        return { error: { _form: ["A variation with these attributes already exists."] } }
-      }
-      throw error
-    }
-
-    revalidatePath(`/admin/products/${productId}`)
-    return { success: true }
-  } catch (e) {
-    console.error("Error updating variation:", e)
     return { error: { _form: ["An unexpected error occurred."] } }
   }
+
+  revalidatePath(`/admin/products/${productId}`)
+  return { success: true }
 }
 
 export async function deleteVariationAction(variationId: string, productId: string) {
