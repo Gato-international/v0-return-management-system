@@ -18,27 +18,40 @@ export default async function ManageProductVariationsPage({ params }: PageProps)
   const { id } = resolvedParams
   const supabase = await createClient()
 
-  const { data: product, error } = await supabase
+  // Step 1: Fetch the product and its linked attribute IDs
+  const { data: product, error: productError } = await supabase
     .from("products")
     .select(`
       *,
       variations:product_variations(*),
-      attributes:product_to_variation_attributes(
-        attribute:variation_attributes(
-          *,
-          options:variation_options(*)
-        )
-      )
+      attributes:product_to_variation_attributes(attribute_id)
     `)
     .eq("id", id)
     .single()
 
-  if (error || !product) {
-    console.error("Error fetching product for variations page:", error)
+  if (productError || !product) {
+    console.error("Error fetching product for variations page:", productError)
     notFound()
   }
 
-  const productAttributes = product.attributes.map((a: any) => a.attribute)
+  const attributeIds = product.attributes.map((a: any) => a.attribute_id)
+  let productAttributes: any[] = []
+
+  // Step 2: If there are linked attributes, fetch their full details
+  if (attributeIds.length > 0) {
+    const { data: attributes, error: attributesError } = await supabase
+      .from("variation_attributes")
+      .select("*, options:variation_options(*)")
+      .in("id", attributeIds)
+      .order("name")
+
+    if (attributesError) {
+      console.error("Error fetching product attributes:", attributesError)
+      // Fallback to empty array, form will be empty but page won't crash
+    } else {
+      productAttributes = attributes || []
+    }
+  }
 
   return (
     <div className="min-h-screen bg-muted/40">
