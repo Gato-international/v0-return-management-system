@@ -117,7 +117,7 @@ export function VariationsTable({ productId, variations, productHasColor, produc
           <DialogHeader>
             <DialogTitle>Edit Variation</DialogTitle>
           </DialogHeader>
-          {variationToedit && (
+          {variationToEdit && (
             <VariationForm
               productId={productId}
               productHasColor={productHasColor}
