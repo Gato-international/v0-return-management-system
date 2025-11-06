@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface ReturnItem {
-  productId: string
+  productVariationId: string
   productName: string
   sku: string
   quantity: number
@@ -31,8 +31,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
     console.log("[v0] Submitting return with data:", data)
     const supabase = await createClient()
 
-    // The top-level 'reason' is deprecated as reasons are now per-item.
-    // The database column 'reason' on the 'returns' table should be nullable.
     const { data: returnRecord, error: returnError } = await supabase
       .from("returns")
       .insert({
@@ -57,7 +55,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
 
     const itemsToInsert = data.items.map((item) => ({
       return_id: returnRecord.id,
-      product_id: item.productId,
+      product_variation_id: item.productVariationId,
       product_name: item.productName,
       sku: item.sku,
       quantity: item.quantity,
@@ -98,7 +96,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
       }
     }
 
-    // Use the auto-generated return_number from the database and format it
     const formattedReturnNumber = formatReturnNumber(returnRecord.return_number)
     await sendReturnConfirmationEmail(data.customerEmail, formattedReturnNumber, data.orderNumber || "N/A")
 
@@ -127,7 +124,7 @@ export async function trackReturnAction(returnNumber: string) {
 
     const { data: items } = await supabase
       .from("return_items")
-      .select("*, product:products(name, sku)")
+      .select("*, variation:product_variations(sku, color, size, product:products(name))")
       .eq("return_id", returnRecord.id)
 
     const { data: statusHistory } = await supabase

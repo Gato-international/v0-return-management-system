@@ -85,8 +85,13 @@ export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
                 {index > 0 && <Separator className="my-3" />}
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{item.product?.name || item.product_name}</p>
-                    <p className="text-sm text-muted-foreground">SKU: {item.product?.sku || item.sku}</p>
+                    <p className="font-medium">{item.variation?.product?.name || item.product_name}</p>
+                    <p className="text-sm text-muted-foreground">SKU: {item.variation?.sku || item.sku}</p>
+                    {(item.variation?.color || item.variation?.size) && (
+                      <p className="text-sm text-muted-foreground">
+                        Variation: {[item.variation.color, item.variation.size].filter(Boolean).join(", ")}
+                      </p>
+                    )}
                     {item.condition && <p className="text-sm text-muted-foreground">Condition: {item.condition}</p>}
                   </div>
                   <div className="text-right">

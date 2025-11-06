@@ -95,14 +95,18 @@ export async function deleteProductAction(productId: string) {
   }
 }
 
-// Action to fetch all products.
+// Action to fetch all products with their variations.
 export async function getProductsAction() {
   try {
     const supabase = createAdminClient()
-    const { data: products, error } = await supabase.from("products").select("*").order("name", { ascending: true })
+    const { data: products, error } = await supabase
+      .from("products")
+      .select("*, variations:product_variations(*)")
+      .order("name", { ascending: true })
+      .order("sku", { referencedTable: "product_variations", ascending: true })
 
     if (error) {
-      console.error("Supabase error fetching products:", error)
+      console.error("Supabase error fetching products with variations:", error)
       return { products: [], error: "Failed to fetch products." }
     }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -15,21 +15,28 @@ import { CheckCircle, AlertCircle, Plus, X } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { ImageUpload } from "@/components/returns/image-upload"
 import { Textarea } from "../ui/textarea"
-import { formatReturnNumber } from "@/lib/utils/formatters"
+import { SearchableProductSelect } from "./searchable-product-select"
 
-// Define Product type for availableProducts prop
+// Define Product and Variation types for availableProducts prop
+interface Variation {
+  id: string
+  sku: string
+  color?: string | null
+  size?: string | null
+}
 interface Product {
-  id: string;
-  name: string;
-  sku: string;
+  id: string
+  name: string
+  sku: string
+  variations: Variation[]
 }
 
 const returnItemSchema = z.object({
-  productId: z.string().min(1, "Product selection is required"), // New: product ID
+  productVariationId: z.string().min(1, "Product selection is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
-  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]), // Reason for this specific item
-  condition: z.string().optional(), // Optional condition for the item
-});
+  reason: z.enum(["DEFECTIVE", "WRONG_ITEM", "CHANGED_MIND", "NOT_AS_DESCRIBED", "OTHER"]),
+  condition: z.string().optional(),
+})
 
 const returnSchema = z.object({
   customerName: z.string().min(1, "Name is required"),
@@ -46,7 +53,7 @@ const returnSchema = z.object({
 type ReturnFormData = z.infer<typeof returnSchema>
 
 interface ReturnFormProps {
-  availableProducts: Product[];
+  availableProducts: Product[]
 }
 
 export function ReturnForm({ availableProducts }: ReturnFormProps) {
@@ -61,29 +68,28 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     formState: { errors },
     setValue,
     watch,
-    control,
   } = useForm<ReturnFormData>({
     resolver: zodResolver(returnSchema),
     defaultValues: {
-      items: [{ productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }],
+      items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }],
       images: [],
     },
   })
 
-  const watchedItems = watch("items");
+  const watchedItems = watch("items")
 
   const addItem = () => {
-    const newItem: z.infer<typeof returnItemSchema> = { productId: "", quantity: 1, reason: "DEFECTIVE", condition: "" };
-    const newItems = [...watchedItems, newItem];
-    setValue("items", newItems);
-  };
+    const newItem: z.infer<typeof returnItemSchema> = { productVariationId: "", quantity: 1, reason: "DEFECTIVE", condition: "" }
+    const newItems = [...watchedItems, newItem]
+    setValue("items", newItems)
+  }
 
   const removeItem = (index: number) => {
     if (watchedItems.length > 1) {
-      const newItems = watchedItems.filter((_, i) => i !== index);
-      setValue("items", newItems);
+      const newItems = watchedItems.filter((_, i) => i !== index)
+      setValue("items", newItems)
     }
-  };
+  }
 
   const onSubmit = async (data: ReturnFormData) => {
     setIsLoading(true)
@@ -91,14 +97,25 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     setSuccess(null)
 
     try {
-      const itemsWithProductDetails = data.items.map(item => {
-        const product = availableProducts.find(p => p.id === item.productId);
-        return {
-          ...item,
-          productName: product?.name || "Unknown Product",
-          sku: product?.sku || "Unknown SKU",
-        };
-      });
+      const itemsWithProductDetails = data.items
+        .map(item => {
+          for (const product of availableProducts) {
+            const variation = product.variations.find(v => v.id === item.productVariationId)
+            if (variation) {
+              return {
+                ...item,
+                productName: product.name,
+                sku: variation.sku,
+              }
+            }
+          }
+          return null
+        })
+        .filter(Boolean) as (z.infer<typeof returnItemSchema> & { productName: string; sku: string })[]
+
+      if (itemsWithProductDetails.length !== data.items.length) {
+        throw new Error("Could not find details for all selected products.")
+      }
 
       const result = await submitReturnAction({ ...data, items: itemsWithProductDetails, images })
       if (result.error) {
@@ -134,63 +151,33 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       {/* Contact Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Contact Information</h3>
-
         <div className="space-y-2">
           <Label htmlFor="customerName">Full Name *</Label>
-          <Input
-            id="customerName"
-            type="text"
-            placeholder="John Doe"
-            {...register("customerName")}
-            disabled={isLoading}
-          />
+          <Input id="customerName" {...register("customerName")} disabled={isLoading} />
           {errors.customerName && <p className="text-sm text-destructive">{errors.customerName.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="customerEmail">Email Address *</Label>
-          <Input
-            id="customerEmail"
-            type="email"
-            placeholder="your@email.com"
-            {...register("customerEmail")}
-            disabled={isLoading}
-          />
+          <Input id="customerEmail" type="email" {...register("customerEmail")} disabled={isLoading} />
           {errors.customerEmail && <p className="text-sm text-destructive">{errors.customerEmail.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="customerPhone">Phone Number (optional)</Label>
-          <Input
-            id="customerPhone"
-            type="tel"
-            placeholder="+1 (555) 123-4567"
-            {...register("customerPhone")}
-            disabled={isLoading}
-          />
-          {errors.customerPhone && <p className="text-sm text-destructive">{errors.customerPhone.message}</p>}
+          <Input id="customerPhone" type="tel" {...register("customerPhone")} disabled={isLoading} />
         </div>
       </div>
 
       {/* Return Details */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Return Details</h3>
-
         <div className="space-y-2">
           <Label htmlFor="description">Description *</Label>
-          <Textarea
-            id="description"
-            placeholder="Please provide details about your return..."
-            rows={4}
-            {...register("description")}
-            disabled={isLoading}
-          />
+          <Textarea id="description" rows={4} {...register("description")} disabled={isLoading} />
           {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="preferredResolution">Preferred Resolution *</Label>
-          <Select onValueChange={(value) => setValue("preferredResolution", value as any)} value={watch("preferredResolution")}>
+          <Select onValueChange={(value) => setValue("preferredResolution", value as any)} disabled={isLoading}>
             <SelectTrigger>
               <SelectValue placeholder="Select your preference" />
             </SelectTrigger>
@@ -200,9 +187,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
               <SelectItem value="STORE_CREDIT">Store Credit</SelectItem>
             </SelectContent>
           </Select>
-          {errors.preferredResolution && (
-            <p className="text-sm text-destructive">{errors.preferredResolution.message}</p>
-          )}
+          {errors.preferredResolution && <p className="text-sm text-destructive">{errors.preferredResolution.message}</p>}
         </div>
       </div>
 
@@ -210,67 +195,41 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Items to Return</h3>
-          <Button type="button" variant="outline" size="sm" onClick={addItem}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
+          <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={isLoading}>
+            <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
         </div>
-
         {watchedItems.map((item, index) => (
           <Card key={index} className="p-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">Item {index + 1}</h4>
                 {watchedItems.length > 1 && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)} disabled={isLoading}>
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-
+              <div className="space-y-2">
+                <Label>Product *</Label>
+                <SearchableProductSelect
+                  products={availableProducts}
+                  value={item.productVariationId}
+                  onChange={(value) => setValue(`items.${index}.productVariationId`, value)}
+                  disabled={isLoading}
+                />
+                {errors.items?.[index]?.productVariationId && <p className="text-sm text-destructive">{errors.items[index]?.productVariationId?.message}</p>}
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Product *</Label>
-                  <Select
-                    onValueChange={(value) => setValue(`items.${index}.productId`, value)}
-                    value={item.productId}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} (SKU: {product.sku})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.items?.[index]?.productId && <p className="text-sm text-destructive">{errors.items[index]?.productId?.message}</p>}
-                </div>
-
-                <div className="space-y-2">
                   <Label>Quantity *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                    disabled={isLoading}
-                  />
+                  <Input type="number" min="1" {...register(`items.${index}.quantity`, { valueAsNumber: true })} disabled={isLoading} />
                   {errors.items?.[index]?.quantity && <p className="text-sm text-destructive">{errors.items[index]?.quantity?.message}</p>}
                 </div>
-
                 <div className="space-y-2">
                   <Label>Reason for Return *</Label>
-                  <Select
-                    onValueChange={(value) => setValue(`items.${index}.reason`, value as any)}
-                    value={item.reason}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a reason" />
-                    </SelectTrigger>
+                  <Select onValueChange={(value) => setValue(`items.${index}.reason`, value as any)} value={item.reason} disabled={isLoading}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="DEFECTIVE">Defective/Damaged</SelectItem>
                       <SelectItem value="WRONG_ITEM">Wrong Item Received</SelectItem>
@@ -279,18 +238,11 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
                       <SelectItem value="OTHER">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.items?.[index]?.reason && <p className="text-sm text-destructive">{errors.items[index]?.reason?.message}</p>}
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Condition (optional)</Label>
-                  <Input
-                    placeholder="e.g., 'New', 'Used', 'Damaged'"
-                    {...register(`items.${index}.condition`)}
-                    disabled={isLoading}
-                  />
-                  {errors.items?.[index]?.condition && <p className="text-sm text-destructive">{errors.items[index]?.condition?.message}</p>}
-                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Condition (optional)</Label>
+                <Input {...register(`items.${index}.condition`)} disabled={isLoading} />
               </div>
             </div>
           </Card>
@@ -298,37 +250,19 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         {errors.items && <p className="text-sm text-destructive">{errors.items.message}</p>}
       </div>
 
-      {/* Product Images (Optional) */}
+      {/* Product Images */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Product Images (Optional)</h3>
-        <p className="text-sm text-muted-foreground">
-          Upload images of the items you're returning. This helps us process your return faster.
-        </p>
         <ImageUpload
           images={images}
-          onUpload={(url) => {
-            const newImages = [...images, url]
-            setImages(newImages)
-            setValue("images", newImages)
-          }}
-          onRemove={(url) => {
-            const newImages = images.filter((img) => img !== url)
-            setImages(newImages)
-            setValue("images", newImages)
-          }}
+          onUpload={(url) => setImages(prev => [...prev, url])}
+          onRemove={(url) => setImages(prev => prev.filter(i => i !== url))}
           maxImages={5}
         />
       </div>
 
       <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Spinner className="mr-2 h-4 w-4" />
-            Submitting...
-          </>
-        ) : (
-          "Submit Return Request"
-        )}
+        {isLoading ? <><Spinner className="mr-2 h-4 w-4" /> Submitting...</> : "Submit Return Request"}
       </Button>
     </form>
   )
