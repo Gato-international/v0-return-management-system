@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Accordion,
   AccordionContent,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, X } from "lucide-react"
 import {
   createAttributeAction,
   createOptionAction,
@@ -45,6 +46,7 @@ interface VariationsClientPageProps {
 }
 
 export function VariationsClientPage({ initialAttributes }: VariationsClientPageProps) {
+  const router = useRouter()
   const { toast } = useToast()
   const [newAttributeName, setNewAttributeName] = useState("")
   const [newOptionValues, setNewOptionValues] = useState<Record<string, string>>({})
@@ -57,6 +59,7 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
     if (result.success) {
       toast({ title: "Success", description: "Attribute created." })
       setNewAttributeName("")
+      router.refresh()
     } else {
       toast({ title: "Error", description: result.error?.name?.[0] || "Failed to create attribute.", variant: "destructive" })
     }
@@ -73,8 +76,29 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
     if (result.success) {
       toast({ title: "Success", description: "Option created." })
       setNewOptionValues(prev => ({ ...prev, [attributeId]: "" }))
+      router.refresh()
     } else {
       toast({ title: "Error", description: result.error?.value?.[0] || "Failed to create option.", variant: "destructive" })
+    }
+  }
+
+  const handleDeleteAttribute = async (attributeId: string) => {
+    const result = await deleteAttributeAction(attributeId)
+    if (result.success) {
+      toast({ title: "Success", description: "Attribute deleted." })
+      router.refresh()
+    } else {
+      toast({ title: "Error", description: result.error || "Failed to delete attribute.", variant: "destructive" })
+    }
+  }
+
+  const handleDeleteOption = async (optionId: string) => {
+    const result = await deleteOptionAction(optionId)
+    if (result.success) {
+      toast({ title: "Success", description: "Option deleted." })
+      router.refresh()
+    } else {
+      toast({ title: "Error", description: result.error || "Failed to delete option.", variant: "destructive" })
     }
   }
 
@@ -102,7 +126,7 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteAttributeAction(attr.id)}>Delete</AlertDialogAction>
+                      <AlertDialogAction onClick={() => handleDeleteAttribute(attr.id)}>Delete</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -115,9 +139,23 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
                       {attr.options.map(opt => (
                         <div key={opt.id} className="flex items-center gap-1 bg-muted rounded-md pl-2 pr-1 py-0.5">
                           <span className="text-sm">{opt.value}</span>
-                          <button onClick={() => deleteOptionAction(opt.id)} className="text-muted-foreground hover:text-destructive">
-                            <X className="h-3 w-3" />
-                          </button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button className="text-muted-foreground hover:text-destructive">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete option "{opt.value}"?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteOption(opt.id)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       ))}
                     </div>
