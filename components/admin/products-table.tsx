@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Edit, Trash2 } from "lucide-react"
+import { Search, Edit, Trash2, Settings } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,9 +16,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { ProductForm } from "./product-form"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { deleteProductAction } from "@/app/actions/products"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 interface Product {
   id: string
@@ -84,7 +85,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -95,7 +95,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
         />
       </div>
 
-      {/* Table */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -119,11 +118,17 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   <TableCell>{product.sku}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditClick(product)}>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/products/${product.id}`}>
+                          <Settings className="h-4 w-4 mr-2" />
+                          Manage Variations
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEditClick(product)}>
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(product.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(product.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                         <span className="sr-only">Delete</span>
                       </Button>
@@ -136,19 +141,15 @@ export function ProductsTable({ products }: ProductsTableProps) {
         </Table>
       </div>
 
-      {/* Results count */}
       <p className="text-sm text-muted-foreground">
         Showing {filteredProducts.length} of {products.length} products
       </p>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product.
-            </AlertDialogDescription>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently delete the product.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -157,7 +158,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Product Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
