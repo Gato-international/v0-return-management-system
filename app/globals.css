@@ -132,6 +132,6 @@
     @apply absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary;
   }
   .day-with-dot[aria-selected="true"]::after {
-    @apply bg-primary-foreground;
+    @apply bg-orange-500;
   }
 }
