@@ -47,7 +47,12 @@ export function VariationForm({ productId, initialData, onSuccess }: VariationFo
   })
 
   useEffect(() => {
-    reset(initialData || { sku: "", color: "", size: "" })
+    const defaultValues = {
+      sku: initialData?.sku || "",
+      color: initialData?.color || "",
+      size: initialData?.size || "",
+    }
+    reset(defaultValues)
   }, [initialData, reset])
 
   const onSubmit = async (data: VariationFormData) => {

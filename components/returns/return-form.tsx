@@ -65,7 +65,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
 
   const availableColors = useMemo(() => {
     if (!selectedProduct) return []
-    const colors = selectedProduct.variations.map((v: Variation) => v.color).filter(Boolean)
+    const colors = selectedProduct.variations.map((v: Variation) => v.color).filter((c): c is string => !!c)
     return [...new Set(colors)]
   }, [selectedProduct])
 
@@ -74,7 +74,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
     const sizes = selectedProduct.variations
       .filter((v: Variation) => v.color === selectedColor)
       .map((v: Variation) => v.size)
-      .filter(Boolean)
+      .filter((s): s is string => !!s)
     return [...new Set(sizes)]
   }, [selectedProduct, selectedColor])
 
@@ -126,7 +126,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
             <Select onValueChange={handleColorChange} disabled={!selectedProductId || availableColors.length === 0}>
               <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
               <SelectContent>
-                {availableColors.map((c: string) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                {availableColors.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -135,7 +135,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
             <Select onValueChange={handleSizeChange} disabled={!selectedColor || availableSizes.length === 0}>
               <SelectTrigger><SelectValue placeholder="Select Size" /></SelectTrigger>
               <SelectContent>
-                {availableSizes.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {availableSizes.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -195,7 +195,27 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     setSuccess(null)
 
     try {
-      const result = await submitReturnAction({ ...data, images })
+      const itemsWithDetails = data.items.map(item => {
+        for (const product of availableProducts) {
+          const variation = product.variations.find(v => v.id === item.productVariationId)
+          if (variation) {
+            return {
+              ...item,
+              productName: product.name,
+              sku: variation.sku,
+            }
+          }
+        }
+        return null
+      }).filter(Boolean)
+
+      if (itemsWithDetails.length !== data.items.length) {
+        setError("Could not find details for all selected items. Please try again.")
+        setIsLoading(false)
+        return
+      }
+
+      const result = await submitReturnAction({ ...data, items: itemsWithDetails, images })
       if (result.error) {
         setError(result.error)
       } else if (result.returnNumber) {
