@@ -19,13 +19,14 @@ export const metadata: Metadata = {
   description: "Professional B2B return management platform",
 }
 
-export default function RootLayout({
-  children,
-  params: { locale },
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode
-  params: { locale: string }
-}>) {
+  params: {
+    locale: string
+  }
+}
+
+export default function RootLayout({ children, params: { locale } }: RootLayoutProps) {
   const messages = useMessages()
 
   return (
