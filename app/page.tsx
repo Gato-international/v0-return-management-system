@@ -44,7 +44,7 @@ export default function HomePage() {
                 </Button>
               </Link>
               <Link href="/returns/track">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white/10 hover:text-white">
+                <Button size="lg" className="w-full sm:w-auto bg-black text-white hover:bg-gray-800">
                   <Search className="h-5 w-5 mr-2" />
                   Track Return
                 </Button>
