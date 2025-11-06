@@ -23,7 +23,7 @@ export async function createVariationAction(data: CreateVariationFormData) {
   // Server-side check: Ensure all attributes for the product are provided and valid
   const { data: productAttributesData, error: attrError } = await supabase
     .from("product_to_variation_attributes")
-    .select("attribute:variation_attributes(name)")
+    .select("attribute:variation_attributes!inner(name)")
     .eq("product_id", productId)
 
   if (attrError) {
@@ -77,7 +77,7 @@ export async function updateVariationAction(variationId: string, productId: stri
   // Similar validation as create
   const { data: productAttributesData, error: attrError } = await supabase
     .from("product_to_variation_attributes")
-    .select("attribute:variation_attributes(name)")
+    .select("attribute:variation_attributes!inner(name)")
     .eq("product_id", productId)
 
   if (attrError) {
