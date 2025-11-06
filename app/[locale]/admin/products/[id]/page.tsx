@@ -10,12 +10,13 @@ import { VariationsTable } from "@/components/admin/variations-table"
 import { Separator } from "@/components/ui/separator"
 
 interface PageProps {
-  params: { id: string }
+  params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
 }
 
 export default async function ManageProductVariationsPage({ params }: PageProps) {
   await requireAuth()
-  const { id } = params
+  const resolvedParams = await params
+  const { id } = resolvedParams
   const supabase = await createClient()
 
   const { data: product, error } = await supabase

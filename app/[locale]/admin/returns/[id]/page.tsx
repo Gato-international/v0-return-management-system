@@ -15,7 +15,7 @@ import { PrintReturnButton } from "@/components/admin/print-return-button"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface PageProps {
-  params: { id: string }
+  params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
 }
 
 const statusColors: Record<string, string> = {
@@ -40,7 +40,8 @@ const statusLabels: Record<string, string> = {
 
 export default async function ReturnDetailPage({ params }: PageProps) {
   const user = await requireAuth()
-  const { id } = params
+  const resolvedParams = await params
+  const { id } = resolvedParams
 
   const supabase = await createClient()
 

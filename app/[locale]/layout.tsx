@@ -28,9 +28,12 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { locale: string }
+  params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
 }) {
-  const { locale } = params
+  // The Next.js runtime is treating `params` as a Promise. We must `await` it.
+  const resolvedParams = await params
+  const { locale } = resolvedParams
+
   const messages = await getMessages()
 
   return (
