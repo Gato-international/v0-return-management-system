@@ -108,7 +108,7 @@ export async function submitReturnAction(data: SubmitReturnData) {
   }
 }
 
-export async function trackReturnAction(returnNumber: string) {
+export async function trackReturnAction(returnNumber: string, email: string) {
   try {
     const supabase = await createClient()
 
@@ -116,10 +116,11 @@ export async function trackReturnAction(returnNumber: string) {
       .from("returns")
       .select("*")
       .eq("return_number", returnNumber)
+      .eq("customer_email", email)
       .single()
 
     if (returnError || !returnRecord) {
-      return { error: "Return not found. Please check your tracking number." }
+      return { error: "Return not found. Please check your tracking number and email address." }
     }
 
     const { data: items } = await supabase

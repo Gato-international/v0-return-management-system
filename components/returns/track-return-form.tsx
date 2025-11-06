@@ -14,6 +14,7 @@ import { ReturnDetails } from "./return-details"
 
 export function TrackReturnForm() {
   const [returnNumber, setReturnNumber] = useState("")
+  const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [returnData, setReturnData] = useState<any>(null)
@@ -24,7 +25,6 @@ export function TrackReturnForm() {
     setError(null)
     setReturnData(null)
 
-    // Ensure returnNumber is a valid number string before passing to action
     if (!/^\d+$/.test(returnNumber)) {
       setError("Please enter a valid numerical tracking number.")
       setIsLoading(false)
@@ -32,7 +32,7 @@ export function TrackReturnForm() {
     }
 
     try {
-      const result = await trackReturnAction(returnNumber)
+      const result = await trackReturnAction(returnNumber, email)
       if (result.error) {
         setError(result.error)
       } else if (result.return) {
@@ -67,10 +67,23 @@ export function TrackReturnForm() {
           onChange={(e) => setReturnNumber(e.target.value)}
           disabled={isLoading}
           required
-          inputMode="numeric" // Suggest numeric keyboard on mobile
-          pattern="[0-9]*" // Only allow numbers
+          inputMode="numeric"
+          pattern="[0-9]*"
         />
         <p className="text-sm text-muted-foreground">Enter the numerical tracking number from your confirmation email</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Your Email Address</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoading}
+          required
+        />
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
