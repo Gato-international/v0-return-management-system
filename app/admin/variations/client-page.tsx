@@ -60,8 +60,13 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
       toast({ title: "Success", description: "Attribute created." })
       setNewAttributeName("")
       router.refresh()
-    } else {
-      const errorMessage = result.error?.name?.[0] || result.error?._form?.[0] || "Failed to create attribute."
+    } else if (result.error) {
+      let errorMessage = "Failed to create attribute."
+      if ("name" in result.error && result.error.name?.length) {
+        errorMessage = result.error.name[0]
+      } else if ("_form" in result.error && result.error._form?.length) {
+        errorMessage = result.error._form[0]
+      }
       toast({ title: "Error", description: errorMessage, variant: "destructive" })
     }
   }
@@ -78,8 +83,13 @@ export function VariationsClientPage({ initialAttributes }: VariationsClientPage
       toast({ title: "Success", description: "Option created." })
       setNewOptionValues(prev => ({ ...prev, [attributeId]: "" }))
       router.refresh()
-    } else {
-      const errorMessage = result.error?.value?.[0] || result.error?._form?.[0] || "Failed to create option."
+    } else if (result.error) {
+      let errorMessage = "Failed to create option."
+      if ("value" in result.error && result.error.value?.length) {
+        errorMessage = result.error.value[0]
+      } else if ("_form" in result.error && result.error._form?.length) {
+        errorMessage = result.error._form[0]
+      }
       toast({ title: "Error", description: errorMessage, variant: "destructive" })
     }
   }
