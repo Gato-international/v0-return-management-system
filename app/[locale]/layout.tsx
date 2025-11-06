@@ -19,20 +19,19 @@ export const metadata: Metadata = {
   description: "Professional B2B return management platform",
 }
 
-interface RootLayoutProps {
+export default function RootLayout({
+  children,
+  params,
+}: {
   children: React.ReactNode
-  params: {
-    locale: string
-  }
-}
-
-export default function RootLayout({ children, params: { locale } }: RootLayoutProps) {
+  params: { locale: string }
+}) {
   const messages = useMessages()
 
   return (
-    <html lang={locale} className={playfairDisplay.variable}>
+    <html lang={params.locale} className={playfairDisplay.variable}>
       <body className={`font-sans antialiased`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale={params.locale} messages={messages}>
           {children}
           <Toaster />
           <Analytics />
