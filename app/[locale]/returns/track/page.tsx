@@ -3,11 +3,11 @@ import { TrackReturnForm } from "@/components/returns/track-return-form"
 import { Package } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
-export default function TrackReturnPage() {
-  const t = useTranslations("TrackReturnPage")
+export default async function TrackReturnPage() {
+  const t = await getTranslations("TrackReturnPage")
 
   return (
     <div className="min-h-screen bg-background">

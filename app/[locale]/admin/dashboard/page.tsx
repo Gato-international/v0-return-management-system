@@ -5,12 +5,12 @@ import { logoutAction } from "@/app/actions/auth"
 import { Package, Clock, CheckCircle, XCircle, Box } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
 export default async function DashboardPage() {
   const user = await requireAuth()
-  const t = useTranslations("DashboardPage")
+  const t = await getTranslations("DashboardPage")
 
   const supabase = await createClient()
 

@@ -1,11 +1,11 @@
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Package } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function ContactPage() {
-  const t = useTranslations("ContactPage")
+export default async function ContactPage() {
+  const t = await getTranslations("ContactPage")
 
   return (
     <div className="min-h-screen bg-background">

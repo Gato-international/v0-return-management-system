@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Package, Search, Shield } from "lucide-react"
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
-export default function HomePage() {
-  const t = useTranslations("HomePage")
+export default async function HomePage() {
+  const t = await getTranslations("HomePage")
 
   return (
     <div className="min-h-screen bg-background text-foreground">

@@ -3,7 +3,7 @@ import { LoginForm } from "@/components/auth/login-form"
 import { Shield } from "lucide-react"
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 export default async function LoginPage() {
   // Redirect if already logged in
@@ -12,7 +12,7 @@ export default async function LoginPage() {
     redirect("/admin/dashboard")
   }
 
-  const t = useTranslations("LoginPage")
+  const t = await getTranslations("LoginPage")
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
