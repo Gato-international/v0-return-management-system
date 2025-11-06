@@ -25,6 +25,26 @@ async function setupDatabase() {
       -- Create sequence for return_number
       CREATE SEQUENCE IF NOT EXISTS returns_return_number_seq;
 
+      -- Create products table
+      CREATE TABLE IF NOT EXISTS products (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        sku TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      -- Create product_variations table
+      CREATE TABLE IF NOT EXISTS product_variations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        sku TEXT UNIQUE NOT NULL,
+        color TEXT,
+        size TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
       -- Create returns table
       CREATE TABLE IF NOT EXISTS returns (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,6 +67,7 @@ async function setupDatabase() {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         return_id UUID NOT NULL REFERENCES returns(id) ON DELETE CASCADE,
         product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+        product_variation_id UUID REFERENCES product_variations(id) ON DELETE SET NULL,
         product_name TEXT NOT NULL,
         sku TEXT NOT NULL,
         quantity INTEGER NOT NULL,
@@ -93,15 +114,6 @@ async function setupDatabase() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
-      -- NEW: Create products table
-      CREATE TABLE IF NOT EXISTS products (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name TEXT NOT NULL,
-        sku TEXT UNIQUE NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW()
-      );
-
       -- Create indexes for better query performance
       CREATE INDEX IF NOT EXISTS idx_returns_return_number ON returns(return_number);
       CREATE INDEX IF NOT EXISTS idx_returns_customer_email ON returns(customer_email);
@@ -113,6 +125,7 @@ async function setupDatabase() {
       CREATE INDEX IF NOT EXISTS idx_return_notes_return_id ON return_notes(return_id);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_return_id ON audit_logs(return_id);
       CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+      CREATE INDEX IF NOT EXISTS idx_product_variations_product_id ON product_variations(product_id);
 
       -- Grant permissions for sequence usage to allow public form submissions
       GRANT USAGE, SELECT ON SEQUENCE returns_return_number_seq TO anon;
