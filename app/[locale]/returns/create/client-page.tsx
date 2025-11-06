@@ -25,6 +25,7 @@ interface CreateReturnClientPageProps {
 export function CreateReturnClientPage({ products }: CreateReturnClientPageProps) {
   const [runTour, setRunTour] = useState(false)
   const t = useTranslations("CreateReturnPage")
+  const tForm = useTranslations("ReturnForm")
 
   const handleTourCallback = (data: CallBackProps) => {
     const { status } = data
@@ -69,7 +70,7 @@ export function CreateReturnClientPage({ products }: CreateReturnClientPageProps
               <CardDescription>{t("description")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <ReturnForm availableProducts={products || []} />
+              <ReturnForm availableProducts={products || []} t={tForm} />
             </CardContent>
           </Card>
         </main>

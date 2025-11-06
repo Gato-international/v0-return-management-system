@@ -11,13 +11,16 @@ const intlMiddleware = createMiddleware({
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if the path is for an admin route (excluding locale prefixes)
   const isAdminPath = /^\/(en|nl)?\/admin/.test(pathname)
   const isLoginPage = /^\/(en|nl)?\/admin\/login/.test(pathname)
 
   if (isAdminPath && !isLoginPage) {
     const token = request.cookies.get("session")?.value
-    const locale = pathname.split("/")[1] || "en" // get locale from path
+
+    // Robust locale detection
+    const pathParts = pathname.split("/")
+    const potentialLocale = pathParts[1]
+    const locale = locales.includes(potentialLocale as any) ? potentialLocale : "en" // Default to 'en'
 
     if (!token) {
       return NextResponse.redirect(new URL(`/${locale}/admin/login`, request.url))
@@ -25,7 +28,10 @@ export default async function middleware(request: NextRequest) {
 
     const user = await verifySession(token)
     if (!user) {
-      return NextResponse.redirect(new URL(`/${locale}/admin/login`, request.url))
+      // Clear invalid cookie and redirect
+      const response = NextResponse.redirect(new URL(`/${locale}/admin/login`, request.url))
+      response.cookies.delete("session")
+      return response
     }
   }
 
@@ -33,6 +39,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match all routes except for static assets and API routes
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

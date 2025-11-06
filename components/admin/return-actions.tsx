@@ -17,6 +17,17 @@ interface ReturnActionsProps {
   userId: string
 }
 
+const statusOptions = [
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "received", label: "Items Received" },
+  { value: "inspecting", label: "Inspecting" },
+  { value: "refund_issued", label: "Refund Issued" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+]
+
 export function ReturnActions({ returnId, currentStatus, userId }: ReturnActionsProps) {
   const [newStatus, setNewStatus] = useState(currentStatus)
   const [statusNotes, setStatusNotes] = useState("")
@@ -106,14 +117,11 @@ export function ReturnActions({ returnId, currentStatus, userId }: ReturnActions
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-                <SelectItem value="ITEMS_RECEIVED">Items Received</SelectItem>
-                <SelectItem value="PROCESSING">Processing</SelectItem>
-                <SelectItem value="COMPLETED">Completed</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
