@@ -50,7 +50,7 @@ type ReturnFormData = z.infer<typeof returnSchema>
 
 interface ReturnFormProps {
   availableProducts: Product[]
-  t: (key: any) => string
+  t: (key: string, values?: Record<string, string | number>) => string
 }
 
 type ItemWithDetails = z.infer<typeof returnItemSchema> & {
@@ -66,7 +66,7 @@ interface ReturnItemCardProps {
   errors: FieldErrors<ReturnFormData>
   remove: (index: number) => void
   canRemove: boolean
-  t: (key: any) => string
+  t: (key: string, values?: Record<string, string | number>) => string
 }
 
 function ReturnItemCard({ index, availableProducts, setValue, register, errors, remove, canRemove, t }: ReturnItemCardProps) {
