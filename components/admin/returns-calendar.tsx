@@ -58,6 +58,7 @@ export function ReturnsCalendar({ returns }: ReturnsCalendarProps) {
             modifiersClassNames={{
               hasReturns: "day-with-dot",
             }}
+            className="rounded-md border"
           />
         </div>
         <div className="space-y-4">
