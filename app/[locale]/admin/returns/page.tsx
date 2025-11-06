@@ -8,13 +8,12 @@ import { ArrowLeft } from "lucide-react"
 import { ReturnsTable } from "@/components/admin/returns-table"
 
 interface PageProps {
-  searchParams: Promise<{ status?: string }>
+  searchParams: { status?: string }
 }
 
 export default async function AdminReturnsPage({ searchParams }: PageProps) {
-  const user = await requireAuth()
-  const params = await searchParams
-  const statusFilter = params.status
+  await requireAuth()
+  const statusFilter = searchParams.status
 
   const supabase = await createClient()
 

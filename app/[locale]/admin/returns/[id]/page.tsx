@@ -15,7 +15,7 @@ import { PrintReturnButton } from "@/components/admin/print-return-button"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
 const statusColors: Record<string, string> = {
@@ -40,7 +40,7 @@ const statusLabels: Record<string, string> = {
 
 export default async function ReturnDetailPage({ params }: PageProps) {
   const user = await requireAuth()
-  const { id } = await params
+  const { id } = params
 
   const supabase = await createClient()
 

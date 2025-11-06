@@ -10,12 +10,12 @@ import { VariationsTable } from "@/components/admin/variations-table"
 import { Separator } from "@/components/ui/separator"
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
 export default async function ManageProductVariationsPage({ params }: PageProps) {
   await requireAuth()
-  const { id } = await params
+  const { id } = params
   const supabase = await createClient()
 
   const { data: product, error } = await supabase
