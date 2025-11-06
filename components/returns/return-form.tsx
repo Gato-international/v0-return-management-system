@@ -70,7 +70,9 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
 
   const availableColors = useMemo((): string[] => {
     if (!selectedProduct) return []
-    const colors = selectedProduct.variations.map((v: Variation) => v.color).filter((c): c is string => !!c)
+    const colors = selectedProduct.variations
+      .map((v: Variation) => v.color)
+      .filter((c: string | null | undefined): c is string => !!c)
     return [...new Set(colors)]
   }, [selectedProduct])
 
@@ -79,7 +81,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
     const sizes = selectedProduct.variations
       .filter((v: Variation) => v.color === selectedColor)
       .map((v: Variation) => v.size)
-      .filter((s): s is string => !!s)
+      .filter((s: string | null | undefined): s is string => !!s)
     return [...new Set(sizes)]
   }, [selectedProduct, selectedColor])
 
