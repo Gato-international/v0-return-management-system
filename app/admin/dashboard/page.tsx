@@ -5,7 +5,6 @@ import { logoutAction } from "@/app/actions/auth"
 import { Package, Clock, CheckCircle, XCircle, Box } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { ReturnsCalendar } from "@/components/admin/returns-calendar"
 
 export default async function DashboardPage() {
   const user = await requireAuth()
@@ -13,15 +12,11 @@ export default async function DashboardPage() {
   const supabase = await createClient()
 
   // Get statistics
-  const [totalReturns, pendingReturns, approvedReturns, rejectedReturns, allReturns] = await Promise.all([
+  const [totalReturns, pendingReturns, approvedReturns, rejectedReturns] = await Promise.all([
     supabase.from("returns").select("*", { count: "exact", head: true }),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "approved"),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "rejected"),
-    supabase
-      .from("returns")
-      .select("id, return_number, customer_name, status, created_at")
-      .order("created_at", { ascending: false }),
   ])
 
   return (
@@ -115,8 +110,6 @@ export default async function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
-
-        <ReturnsCalendar returns={allReturns.data || []} />
       </main>
     </div>
   )
