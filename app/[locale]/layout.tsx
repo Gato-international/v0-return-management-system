@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
-import "./globals.css"
+import "../globals.css"
 import { NextIntlClientProvider, useMessages } from "next-intl"
 
 const _geist = Geist({ subsets: ["latin"] })
