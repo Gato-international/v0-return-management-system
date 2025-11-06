@@ -52,6 +52,11 @@ interface ReturnFormProps {
   availableProducts: Product[]
 }
 
+type ItemWithDetails = z.infer<typeof returnItemSchema> & {
+  productName: string
+  sku: string
+}
+
 function ReturnItemCard({ index, availableProducts, control, register, errors, remove, canRemove }: any) {
   const [selectedProductId, setSelectedProductId] = useState("")
   const [selectedColor, setSelectedColor] = useState("")
@@ -126,7 +131,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
             <Select onValueChange={handleColorChange} disabled={!selectedProductId || availableColors.length === 0}>
               <SelectTrigger><SelectValue placeholder="Select Color" /></SelectTrigger>
               <SelectContent>
-                {availableColors.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                {availableColors.map((c: string) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -135,7 +140,7 @@ function ReturnItemCard({ index, availableProducts, control, register, errors, r
             <Select onValueChange={handleSizeChange} disabled={!selectedColor || availableSizes.length === 0}>
               <SelectTrigger><SelectValue placeholder="Select Size" /></SelectTrigger>
               <SelectContent>
-                {availableSizes.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {availableSizes.map((s: string) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -195,19 +200,21 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     setSuccess(null)
 
     try {
-      const itemsWithDetails = data.items.map(item => {
-        for (const product of availableProducts) {
-          const variation = product.variations.find(v => v.id === item.productVariationId)
-          if (variation) {
-            return {
-              ...item,
-              productName: product.name,
-              sku: variation.sku,
+      const itemsWithDetails = data.items
+        .map((item): ItemWithDetails | null => {
+          for (const product of availableProducts) {
+            const variation = product.variations.find(v => v.id === item.productVariationId)
+            if (variation) {
+              return {
+                ...item,
+                productName: product.name,
+                sku: variation.sku,
+              }
             }
           }
-        }
-        return null
-      }).filter(Boolean)
+          return null
+        })
+        .filter((item): item is ItemWithDetails => !!item)
 
       if (itemsWithDetails.length !== data.items.length) {
         setError("Could not find details for all selected items. Please try again.")

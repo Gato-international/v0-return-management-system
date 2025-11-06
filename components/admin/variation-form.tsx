@@ -58,7 +58,7 @@ export function VariationForm({ productId, initialData, onSuccess }: VariationFo
   const onSubmit = async (data: VariationFormData) => {
     try {
       const result = isEditMode
-        ? await updateVariationAction(initialData.id, productId, data)
+        ? await updateVariationAction(initialData!.id, productId, data)
         : await createVariationAction(productId, data)
 
       if (result.success) {
