@@ -138,10 +138,27 @@ export async function trackReturnAction(returnNumber: string, email: string) {
       return { error: "Return not found. Please check your tracking number and email address." }
     }
 
-    const { data: items } = await supabase
-      .from("return_items")
-      .select("*, variation:product_variations(sku, attributes, product:products(name))")
-      .eq("return_id", returnRecord.id)
+    const { data: rawItems } = await supabase.from("return_items").select("*").eq("return_id", returnRecord.id)
+    const items: any[] = rawItems || []
+
+    if (items.length > 0) {
+      const variationIds = items.map((item) => item.product_variation_id).filter(Boolean)
+      if (variationIds.length > 0) {
+        const { data: variations } = await supabase
+          .from("product_variations")
+          .select("id, sku, attributes, product:products(name)")
+          .in("id", variationIds)
+
+        if (variations) {
+          const variationsMap = new Map(variations.map((v) => [v.id, v]))
+          items.forEach((item) => {
+            if (item.product_variation_id) {
+              item.variation = variationsMap.get(item.product_variation_id)
+            }
+          })
+        }
+      }
+    }
 
     const { data: statusHistory } = await supabase
       .from("return_status_history")
@@ -155,7 +172,7 @@ export async function trackReturnAction(returnNumber: string, email: string) {
       success: true,
       return: {
         ...returnRecord,
-        items: items || [],
+        items: items,
         statusHistory: statusHistory || [],
         images: images || [],
       },

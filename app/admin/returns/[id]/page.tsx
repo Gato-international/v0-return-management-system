@@ -52,11 +52,29 @@ export default async function ReturnDetailPage({ params }: PageProps) {
   }
 
   // Fetch related data
-  const [{ data: items }, { data: statusHistory }, { data: notes }, { data: images }] = await Promise.all([
-    supabase
-      .from("return_items")
-      .select("*, variation:product_variations(sku, attributes, product:products(name))")
-      .eq("return_id", id),
+  const { data: rawItems } = await supabase.from("return_items").select("*").eq("return_id", id)
+  const items: any[] = rawItems || []
+
+  if (items.length > 0) {
+    const variationIds = items.map((item) => item.product_variation_id).filter(Boolean)
+    if (variationIds.length > 0) {
+      const { data: variations } = await supabase
+        .from("product_variations")
+        .select("id, sku, attributes, product:products(name)")
+        .in("id", variationIds)
+
+      if (variations) {
+        const variationsMap = new Map(variations.map((v) => [v.id, v]))
+        items.forEach((item) => {
+          if (item.product_variation_id) {
+            item.variation = variationsMap.get(item.product_variation_id)
+          }
+        })
+      }
+    }
+  }
+
+  const [{ data: statusHistory }, { data: notes }, { data: images }] = await Promise.all([
     supabase.from("return_status_history").select("*").eq("return_id", id).order("created_at", { ascending: false }),
     supabase
       .from("return_notes")
