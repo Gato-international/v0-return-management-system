@@ -21,7 +21,7 @@ export async function getBannerSettings() {
   return { settings: data }
 }
 
-export async function updateBannerSettings(formData: FormData) {
+export async function updateBannerSettings(prevState: any, formData: FormData) {
   const rawData = {
     message: formData.get("message"),
     color_scheme: formData.get("color_scheme"),
@@ -30,7 +30,7 @@ export async function updateBannerSettings(formData: FormData) {
 
   const validation = bannerSettingsSchema.safeParse(rawData)
   if (!validation.success) {
-    return { error: validation.error.flatten().fieldErrors }
+    return { success: false, error: validation.error.flatten().fieldErrors }
   }
 
   const supabase = createAdminClient()
@@ -40,10 +40,10 @@ export async function updateBannerSettings(formData: FormData) {
 
   if (error) {
     console.error("Error updating banner settings:", error)
-    return { error: { _form: ["Database error."] } }
+    return { success: false, error: { _form: ["Database error."] } }
   }
 
   // Revalidate all paths to show/hide the banner immediately
   revalidatePath("/", "layout")
-  return { success: true }
+  return { success: true, error: null }
 }
