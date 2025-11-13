@@ -1,7 +1,7 @@
 "use client"
 
-import { useFormState } from "react-dom"
-import { useEffect } from "react"
+import { useActionState, useEffect } from "react"
+import { useFormStatus } from "react-dom"
 import { updateBannerSettings } from "@/app/actions/settings"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
@@ -23,7 +23,7 @@ interface BannerSettingsFormProps {
 
 export function BannerSettingsForm({ initialSettings }: BannerSettingsFormProps) {
   const { toast } = useToast()
-  const [state, formAction] = useFormState(updateBannerSettings, { success: false, error: null })
+  const [state, formAction] = useActionState(updateBannerSettings, { success: false, error: null })
 
   useEffect(() => {
     if (state.success) {
@@ -84,42 +84,12 @@ export function BannerSettingsForm({ initialSettings }: BannerSettingsFormProps)
 }
 
 function SubmitButton() {
-    // This is a workaround to use useFormStatus with Next.js 13/14 server actions
-    // by putting the button in its own component.
-    const [status, setStatus] = useState({ pending: false });
-    const form = typeof window !== 'undefined' ? document.querySelector('form') : null;
+  const { pending } = useFormStatus()
 
-    useEffect(() => {
-        if (!form) return;
-
-        const handleSubmit = (e: Event) => {
-            if (e.target === form) {
-                setStatus({ pending: true });
-            }
-        };
-
-        const handleReset = () => {
-            setStatus({ pending: false });
-        };
-
-        form.addEventListener('submit', handleSubmit);
-        // Assuming the form state is reset or the component re-renders on success
-        // A more robust solution might involve context or a state lift
-        // but for this simple case, we'll rely on re-render.
-        // Let's add a simple timeout to reset pending state.
-        if (status.pending) {
-            setTimeout(handleReset, 2000); // Reset after 2s
-        }
-
-        return () => {
-            form.removeEventListener('submit', handleSubmit);
-        };
-    }, [form, status.pending]);
-
-    return (
-        <Button type="submit" className="w-full" disabled={status.pending}>
-            {status.pending ? <Spinner className="mr-2 h-4 w-4" /> : null}
-            Save Settings
-        </Button>
-    );
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? <Spinner className="mr-2 h-4 w-4" /> : null}
+      Save Settings
+    </Button>
+  )
 }
