@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ReturnFormTour } from "@/components/returns/return-form-tour"
 import type { CallBackProps } from "react-joyride"
+import { ReportBugDialog } from "@/components/returns/report-bug-dialog"
 
 interface Product {
   id: string
@@ -49,6 +50,7 @@ export function CreateReturnClientPage({ products }: CreateReturnClientPageProps
               <h1 className="text-xl font-semibold">ReturnHub</h1>
             </Link>
             <div className="flex items-center gap-2">
+              <ReportBugDialog />
               <Button variant="outline" size="sm" onClick={() => setRunTour(true)}>
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Take a Tour

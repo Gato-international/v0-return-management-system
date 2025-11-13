@@ -233,3 +233,61 @@ export async function sendNewReturnNotificationEmail(
     return false
   }
 }
+
+export async function sendBugReportEmail(description: string) {
+  const toEmail = "it@gatosports.com"
+  const subject = "New Bug Report from Return Portal"
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #f4f4f4; padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
+          .content { padding: 20px; }
+          .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          .report-box { background: #fff; border: 1px solid #ddd; padding: 15px; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Bug Report</h1>
+          </div>
+          <div class="content">
+            <p>A user has submitted a bug report from the return creation page.</p>
+            <div class="report-box">
+              <strong>Description:</strong>
+              <p>${description}</p>
+            </div>
+          </div>
+          <div class="footer">
+            <p>This is an automated notification.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `
+
+  if (!resend) {
+    console.log("[v0] RESEND_API_KEY not set. Skipping actual email sending for bug report.")
+    console.log(`[v0] To: ${toEmail}`)
+    console.log(`[v0] Subject: ${subject}`)
+    return true
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: toEmail,
+      subject: subject,
+      html: htmlContent,
+    })
+    console.log("[v0] Bug report email sent successfully via Resend.")
+    return true
+  } catch (error) {
+    console.error("[v0] Failed to send bug report email:", error)
+    return false
+  }
+}
