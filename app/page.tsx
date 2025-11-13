@@ -29,7 +29,7 @@ export default async function HomePage() {
         <main className="flex-grow flex items-center justify-center">
           <div className="container mx-auto px-4 text-center space-y-6">
             <h2
-              className="text-4xl md:text-5xl font-bold tracking-tight text-balance font-display"
+              className="text-4xl md:text-5xl font-bold tracking-wide text-balance font-display"
               dangerouslySetInnerHTML={{ __html: "Official Gato-international <br /> Return portal" }}
             />
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
