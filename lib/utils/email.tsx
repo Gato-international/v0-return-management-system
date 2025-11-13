@@ -163,3 +163,73 @@ export async function sendStatusUpdateEmail(email: string, returnNumber: string,
     return false
   }
 }
+
+export async function sendNewReturnNotificationEmail(
+  returnNumber: string,
+  customerName: string,
+  customerEmail: string,
+  orderNumber: string,
+  returnId: string
+) {
+  const adminEmails = ["office@gato-international.com", "it@gatosports.com"]
+  const subject = `New Return Request Submitted: #${returnNumber}`
+  const adminReturnUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://v0-return-management-system.vercel.app"}/admin/returns/${returnId}`
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #000; color: #fff; padding: 20px; text-align: center; }
+          .content { padding: 20px; background: #f9f9f9; }
+          .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          .button { display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 4px; }
+          .info-box { background: #fff; padding: 15px; margin: 15px 0; border-left: 4px solid #000; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>New Return Request</h1>
+          </div>
+          <div class="content">
+            <p>A new return request has been submitted.</p>
+            <div class="info-box">
+              <strong>Return Number:</strong> ${returnNumber}<br>
+              <strong>Customer:</strong> ${customerName} (${customerEmail})<br>
+              <strong>Order Number:</strong> ${orderNumber}
+            </div>
+            <p>Please review the request in the admin dashboard.</p>
+            <a href="${adminReturnUrl}" class="button">View Return</a>
+          </div>
+          <div class="footer">
+            <p>This is an automated notification.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `
+
+  if (!resend) {
+    console.log("[v0] RESEND_API_KEY not set. Skipping actual email sending for admin notification.")
+    console.log(`[v0] To: ${adminEmails.join(", ")}`)
+    console.log(`[v0] Subject: ${subject}`)
+    return true
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: adminEmails,
+      subject: subject,
+      html: htmlContent,
+    })
+    console.log("[v0] New return notification email sent successfully via Resend.")
+    return true
+  } catch (error) {
+    console.error("[v0] Failed to send new return notification email:", error)
+    return false
+  }
+}

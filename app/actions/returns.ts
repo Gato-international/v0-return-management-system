@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { sendReturnConfirmationEmail } from "@/lib/utils/email"
+import { sendReturnConfirmationEmail, sendNewReturnNotificationEmail } from "@/lib/utils/email"
 import { revalidatePath } from "next/cache"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 
@@ -100,6 +100,14 @@ export async function submitReturnAction(data: SubmitReturnData) {
 
     const formattedReturnNumber = formatReturnNumber(returnRecord.return_number)
     await sendReturnConfirmationEmail(data.customerEmail, formattedReturnNumber, data.orderNumber || "N/A")
+
+    await sendNewReturnNotificationEmail(
+      formattedReturnNumber,
+      data.customerName,
+      data.customerEmail,
+      data.orderNumber || "N/A",
+      returnRecord.id
+    )
 
     revalidatePath("/admin/dashboard")
 
