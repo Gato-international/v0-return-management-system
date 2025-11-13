@@ -13,6 +13,7 @@ import { ReturnActions } from "@/components/admin/return-actions"
 import { DeleteReturnButton } from "@/components/admin/delete-return-button"
 import { PrintReturnButton } from "@/components/admin/print-return-button"
 import { formatReturnNumber } from "@/lib/utils/formatters"
+import { ResendNotificationButton } from "@/components/admin/resend-notification-button"
 
 interface PageProps {
   params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
@@ -265,6 +266,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
                 <CardTitle>More Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <ResendNotificationButton returnId={returnData.id} userId={user.id} />
                 <PrintReturnButton />
                 <DeleteReturnButton returnId={returnData.id} userId={user.id} />
               </CardContent>

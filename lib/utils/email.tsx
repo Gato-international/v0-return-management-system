@@ -234,6 +234,72 @@ export async function sendNewReturnNotificationEmail(
   }
 }
 
+export async function sendAdminManualNotificationEmail(
+  returnNumber: string,
+  status: string,
+  returnId: string
+) {
+  const adminEmail = "office@gato-international.com"
+  const subject = `Notification Resent for Return #${returnNumber}`
+  const adminReturnUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://v0-return-management-system.vercel.app"}/admin/returns/${returnId}`
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #000; color: #fff; padding: 20px; text-align: center; }
+          .content { padding: 20px; background: #f9f9f9; }
+          .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+          .button { display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 4px; }
+          .info-box { background: #fff; padding: 15px; margin: 15px 0; border-left: 4px solid #000; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Return Notification Resent</h1>
+          </div>
+          <div class="content">
+            <p>This is a confirmation that a status update email for the following return has been manually resent to the customer.</p>
+            <div class="info-box">
+              <strong>Return Number:</strong> ${returnNumber}<br>
+              <strong>Current Status:</strong> ${status.replace(/_/g, " ")}
+            </div>
+            <a href="${adminReturnUrl}" class="button">View Return Details</a>
+          </div>
+          <div class="footer">
+            <p>This is an automated notification.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `
+
+  if (!resend) {
+    console.log("[v0] RESEND_API_KEY not set. Skipping actual email sending for admin manual notification.")
+    console.log(`[v0] To: ${adminEmail}`)
+    console.log(`[v0] Subject: ${subject}`)
+    return true
+  }
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: adminEmail,
+      subject: subject,
+      html: htmlContent,
+    })
+    console.log("[v0] Admin manual notification email sent successfully via Resend.")
+    return true
+  } catch (error) {
+    console.error("[v0] Failed to send admin manual notification email:", error)
+    return false
+  }
+}
+
 export async function sendBugReportEmail(description: string) {
   const toEmail = "it@gatosports.com"
   const subject = "New Bug Report from Return Portal"

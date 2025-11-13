@@ -2,8 +2,9 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
-import { sendStatusUpdateEmail } from "@/lib/utils/email"
+import { sendStatusUpdateEmail, sendAdminManualNotificationEmail } from "@/lib/utils/email"
 import { redirect } from "next/navigation"
+import { formatReturnNumber } from "@/lib/utils/formatters"
 
 export async function updateReturnStatusAction(returnId: string, newStatus: string, notes: string, userId: string) {
   try {
@@ -39,7 +40,7 @@ export async function updateReturnStatusAction(returnId: string, newStatus: stri
     if (historyError) throw historyError
 
     // Send email notification
-    await sendStatusUpdateEmail(returnData.customer_email, returnData.return_number, newStatus, notes)
+    await sendStatusUpdateEmail(returnData.customer_email, formatReturnNumber(returnData.return_number), newStatus, notes)
 
     // Log the action
     await supabase.from("audit_logs").insert({
@@ -115,4 +116,48 @@ export async function deleteReturnAction(returnId: string, userId: string) {
 
   // Redirect to the returns list after successful deletion
   redirect("/admin/returns")
+}
+
+export async function resendNotificationAction(returnId: string, userId: string) {
+  try {
+    const supabase = createAdminClient()
+
+    const { data: returnData, error } = await supabase
+      .from("returns")
+      .select("customer_email, return_number, status")
+      .eq("id", returnId)
+      .single()
+
+    if (error || !returnData) {
+      return { error: "Return not found." }
+    }
+
+    const formattedReturnNumber = formatReturnNumber(returnData.return_number)
+
+    // Send status update to customer
+    const customerEmailSent = await sendStatusUpdateEmail(returnData.customer_email, formattedReturnNumber, returnData.status)
+    if (!customerEmailSent) {
+      return { error: "Failed to send notification to customer." }
+    }
+
+    // Send notification to admin
+    const adminEmailSent = await sendAdminManualNotificationEmail(formattedReturnNumber, returnData.status, returnId)
+    if (!adminEmailSent) {
+      // Log this but don't fail the whole operation if only the admin email fails
+      console.error("[v0] Failed to send notification to admin, but customer email was successful.")
+    }
+
+    // Log the action
+    await supabase.from("audit_logs").insert({
+      return_id: returnId,
+      action: "RESEND_NOTIFICATION",
+      details: { message: `Notification for status '${returnData.status}' resent.` },
+      user_id: userId,
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("[v0] Error resending notification:", error)
+    return { error: "Failed to resend notification." }
+  }
 }
