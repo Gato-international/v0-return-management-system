@@ -74,10 +74,6 @@ export function LoginForm() {
           "Sign In"
         )}
       </Button>
-
-      <p className="text-sm text-muted-foreground text-center mt-4">
-        Default credentials: admin@company.com / Admin123!
-      </p>
     </form>
   )
 }
