@@ -2,7 +2,7 @@ import { requireAuth } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
-import { Package, Clock, CheckCircle, XCircle, Box, Settings } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Box, Settings, Annoyed } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 
@@ -88,17 +88,11 @@ export default async function DashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-4 md:grid-cols-3">
             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
               <Link href="/admin/returns">
                 <Package className="mr-2 h-4 w-4" />
                 View All Returns
-              </Link>
-            </Button>
-            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
-              <Link href="/admin/returns?status=pending">
-                <Clock className="mr-2 h-4 w-4" />
-                Pending Reviews
               </Link>
             </Button>
             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
@@ -111,6 +105,12 @@ export default async function DashboardPage() {
               <Link href="/admin/variations">
                 <Settings className="mr-2 h-4 w-4" />
                 Manage Variations
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/settings">
+                <Annoyed className="mr-2 h-4 w-4" />
+                Site Settings
               </Link>
             </Button>
           </CardContent>

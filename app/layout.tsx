@@ -4,6 +4,8 @@ import { Inter, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { Toaster } from "@/components/ui/toaster"
 import Script from "next/script"
+import { getBannerSettings } from "./actions/settings"
+import { NotificationBanner } from "@/components/site/notification-banner"
 import "./globals.css"
 
 const inter = Inter({
@@ -22,14 +24,22 @@ export const metadata: Metadata = {
   description: "Professional B2B return management platform",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { settings: bannerSettings } = await getBannerSettings()
+
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body className={`font-sans antialiased`}>
+        {bannerSettings?.is_active && (
+          <NotificationBanner
+            message={bannerSettings.message}
+            colorScheme={bannerSettings.color_scheme as any}
+          />
+        )}
         {children}
         <Toaster />
         <Analytics />
