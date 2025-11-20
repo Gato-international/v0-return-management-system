@@ -24,6 +24,9 @@ interface BannerSettingsFormProps {
 export function BannerSettingsForm({ initialSettings }: BannerSettingsFormProps) {
   const { toast } = useToast()
   const [state, formAction] = useActionState(updateBannerSettings, { success: false, error: null })
+  
+  // Cast the error state to allow accessing arbitrary keys like _form
+  const errors = state.error as Record<string, string[] | undefined> | null
 
   useEffect(() => {
     if (state.success) {
@@ -33,10 +36,10 @@ export function BannerSettingsForm({ initialSettings }: BannerSettingsFormProps)
 
   return (
     <form action={formAction} className="space-y-6">
-      {state.error?._form && (
+      {errors?._form && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error._form[0]}</AlertDescription>
+          <AlertDescription>{errors._form[0]}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">
@@ -48,7 +51,7 @@ export function BannerSettingsForm({ initialSettings }: BannerSettingsFormProps)
           rows={3}
           required
         />
-        {state.error?.message && <p className="text-sm text-destructive mt-1">{state.error.message[0]}</p>}
+        {errors?.message && <p className="text-sm text-destructive mt-1">{errors.message[0]}</p>}
       </div>
       <div className="space-y-2">
         <Label htmlFor="color_scheme">Color Scheme</Label>
