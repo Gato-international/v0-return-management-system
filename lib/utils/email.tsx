@@ -51,12 +51,18 @@ export async function sendReturnConfirmationEmail(email: string, returnNumber: s
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: subject,
       html: htmlContent,
     })
+
+    if (error) {
+      console.error("[v0] Resend API Error:", error)
+      return false
+    }
+
     console.log("[v0] Confirmation email sent successfully via Resend.")
     return true
   } catch (error) {
@@ -150,12 +156,18 @@ export async function sendStatusUpdateEmail(email: string, returnNumber: string,
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: subject,
       html: htmlContent,
     })
+
+    if (error) {
+      console.error("[v0] Resend API Error (Status Update):", error)
+      return false
+    }
+
     console.log("[v0] Status update email sent successfully via Resend.")
     return true
   } catch (error) {
@@ -220,12 +232,18 @@ export async function sendNewReturnNotificationEmail(
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: adminEmails,
       subject: subject,
       html: htmlContent,
     })
+
+    if (error) {
+      console.error("[v0] Resend API Error (Admin Notification):", error)
+      return false
+    }
+
     console.log("[v0] New return notification email sent successfully via Resend.")
     return true
   } catch (error) {
@@ -286,12 +304,18 @@ export async function sendAdminManualNotificationEmail(
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: adminEmail,
       subject: subject,
       html: htmlContent,
     })
+
+    if (error) {
+      console.error("[v0] Resend API Error (Manual Notification):", error)
+      return false
+    }
+
     console.log("[v0] Admin manual notification email sent successfully via Resend.")
     return true
   } catch (error) {
@@ -344,12 +368,18 @@ export async function sendBugReportEmail(description: string) {
   }
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: toEmail,
       subject: subject,
       html: htmlContent,
     })
+
+    if (error) {
+      console.error("[v0] Resend API Error (Bug Report):", error)
+      return false
+    }
+
     console.log("[v0] Bug report email sent successfully via Resend.")
     return true
   } catch (error) {
