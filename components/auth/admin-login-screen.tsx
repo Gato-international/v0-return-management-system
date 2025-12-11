@@ -53,8 +53,8 @@ export function AdminLoginScreen() {
         }
         title="Welcome back"
         description="Sign in with your admin credentials to access the dashboard."
-        imageSrc="https://images.unsplash.com/photo-1515165562835-c4c9e0737eaa?auto=format&fit=crop&w=1200&q=80"
-        imageAlt="Warehouse with organized shelves and boxes."
+        imageSrc="/images/admin-login-hero.jpg"
+        imageAlt="Person wearing high-visibility Gato gear outdoors."
         onSubmit={handleSubmit}
         forgotPasswordHref="#"
         createAccountHref="#"
