@@ -2,7 +2,7 @@ import { requireAuth } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
-import { Package, Clock, CheckCircle, XCircle, Box, Settings, Annoyed } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Box, Settings, Annoyed, Code2, FileText } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
+          <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
               <Link href="/admin/returns">
                 <Package className="mr-2 h-4 w-4" />
@@ -111,6 +111,18 @@ export default async function DashboardPage() {
               <Link href="/admin/settings">
                 <Annoyed className="mr-2 h-4 w-4" />
                 Site Settings
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/developer">
+                <Code2 className="mr-2 h-4 w-4" />
+                Developer Section
+              </Link>
+            </Button>
+            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+              <Link href="/admin/release-notes">
+                <FileText className="mr-2 h-4 w-4" />
+                Release Notes
               </Link>
             </Button>
           </CardContent>

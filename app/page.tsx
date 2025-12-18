@@ -15,6 +15,11 @@ export default async function HomePage() {
               <h1 className="text-xl font-semibold">GATO-INTERNATIONAL</h1>
             </div>
             <div className="flex items-center gap-4">
+              <Link href="/release-notes">
+                <Button variant="ghost" size="sm">
+                  Release Notes
+                </Button>
+              </Link>
               <Link href="/admin/login">
                 <Button variant="ghost" size="sm">
                   <Shield className="h-4 w-4 mr-2" />

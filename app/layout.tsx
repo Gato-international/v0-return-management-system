@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import Script from "next/script"
 import { getBannerSettings } from "./actions/settings"
 import { NotificationBanner } from "@/components/site/notification-banner"
+import { NotificationPopup } from "@/components/site/notification-popup"
 import "./globals.css"
 
 const inter = Inter({
@@ -29,15 +30,23 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { settings: bannerSettings } = await getBannerSettings()
+  const { settings: notificationSettings } = await getBannerSettings()
 
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body className={`font-sans antialiased`}>
-        {bannerSettings?.is_active && (
+        {notificationSettings?.is_active && notificationSettings.display_type === "banner" && (
           <NotificationBanner
-            message={bannerSettings.message}
-            colorScheme={bannerSettings.color_scheme as any}
+            message={notificationSettings.message}
+            colorScheme={notificationSettings.color_scheme as any}
+          />
+        )}
+        {notificationSettings?.is_active && notificationSettings.display_type === "popup" && (
+          <NotificationPopup
+            message={notificationSettings.message}
+            colorScheme={notificationSettings.color_scheme as any}
+            notificationId={`notification-${notificationSettings.id || 1}`}
+            imageUrl={notificationSettings.image_url}
           />
         )}
         {children}

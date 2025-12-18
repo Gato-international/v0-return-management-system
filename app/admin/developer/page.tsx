@@ -1,16 +1,20 @@
 import { requireAuth } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { getBannerSettings } from "@/app/actions/settings"
-import { BannerSettingsForm } from "./banner-form"
+import { DeveloperContent } from "./developer-content"
+import { getTodosAction } from "@/app/actions/developer"
 
-export default async function AdminSettingsPage() {
+export default async function DeveloperPage() {
   await requireAuth()
-  const { settings } = await getBannerSettings()
-
+  
+  const { todos } = await getTodosAction()
+  const stats = {
+    total: todos.length,
+    completed: todos.filter(t => t.done).length,
+    inProgress: todos.filter(t => !t.done).length,
+  }
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -23,8 +27,8 @@ export default async function AdminSettingsPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Site Settings</h1>
-              <p className="text-sm text-muted-foreground">Manage global site features</p>
+              <h1 className="text-2xl font-bold">Developer Section</h1>
+              <p className="text-sm text-muted-foreground">Development tools and task management</p>
             </div>
           </div>
           <form action={logoutAction}>
@@ -36,15 +40,7 @@ export default async function AdminSettingsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Site Notifications</CardTitle>
-            <CardDescription>Display a site-wide notification as a banner or popup to all visitors.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BannerSettingsForm initialSettings={settings} />
-          </CardContent>
-        </Card>
+        <DeveloperContent todos={todos} stats={stats} />
       </main>
     </div>
   )

@@ -6,7 +6,9 @@ import { z } from "zod"
 
 const bannerSettingsSchema = z.object({
   message: z.string().min(1, "Message cannot be empty."),
-  color_scheme: z.enum(["info", "success", "warning", "danger"]),
+  color_scheme: z.enum(["info", "success", "warning", "danger", "white"]),
+  display_type: z.enum(["banner", "popup"]),
+  image_url: z.string().optional(),
   is_active: z.boolean(),
 })
 
@@ -25,6 +27,8 @@ export async function updateBannerSettings(prevState: any, formData: FormData) {
   const rawData = {
     message: formData.get("message"),
     color_scheme: formData.get("color_scheme"),
+    display_type: formData.get("display_type"),
+    image_url: formData.get("image_url") || null,
     is_active: formData.get("is_active") === "true",
   }
 
