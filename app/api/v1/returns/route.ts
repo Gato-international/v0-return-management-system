@@ -8,7 +8,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Query params: ?status=pending&limit=50&offset=0&since=2024-01-01T00:00:00Z
  */
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const supabase = createAdminClient()

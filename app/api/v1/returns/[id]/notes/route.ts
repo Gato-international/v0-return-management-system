@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Get all notes for a return.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Body: { note: string }
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params

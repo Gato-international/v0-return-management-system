@@ -8,7 +8,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Body: { name?: string, sku?: string, attributeIds?: string[] }
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params
@@ -52,7 +52,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
  * Delete a product.
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params

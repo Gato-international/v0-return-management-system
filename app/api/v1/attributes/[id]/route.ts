@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Delete a variation attribute with all its options.
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params

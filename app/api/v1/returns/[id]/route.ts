@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Get a single return with all related data.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
  * Delete a return and all related data (cascading).
  */
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params

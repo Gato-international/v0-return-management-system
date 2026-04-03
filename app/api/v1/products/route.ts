@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * List all products with variations and linked attributes.
  */
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const supabase = createAdminClient()
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
  * Body: { name: string, sku: string, attributeIds?: string[] }
  */
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const body = await request.json()

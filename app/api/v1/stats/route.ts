@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Get dashboard statistics.
  */
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const supabase = createAdminClient()

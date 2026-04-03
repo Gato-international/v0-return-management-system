@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * List all variation attributes with their options.
  */
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const supabase = createAdminClient()
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
  * Body: { name: string }
  */
 export async function POST(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const body = await request.json()

@@ -10,7 +10,7 @@ import { formatReturnNumber } from "@/lib/utils/formatters"
  * Body: { status: string, notes?: string }
  */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id } = await params

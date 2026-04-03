@@ -7,7 +7,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Get notification banner settings.
  */
 export async function GET(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const supabase = createAdminClient()
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
  * Body: { message?: string, color_scheme?: string, display_type?: string, is_active?: boolean, image_url?: string }
  */
 export async function PUT(request: NextRequest) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const body = await request.json()

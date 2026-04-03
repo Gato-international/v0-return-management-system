@@ -8,7 +8,7 @@ import { validateApiKey, unauthorizedResponse, errorResponse, successResponse } 
  * Body: { attributes: { [key: string]: string } }
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!validateApiKey(request)) return unauthorizedResponse()
+  if (!(await validateApiKey(request))) return unauthorizedResponse()
 
   try {
     const { id: productId } = await params
