@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Package, Calendar, Mail, FileText } from "lucide-react"
+import { ArrowLeft, Package, Calendar, Mail, FileText, FileDown } from "lucide-react"
 import { format } from "date-fns"
 import { formatReturnNumber } from "@/lib/utils/formatters"
+import { DownloadSlipButton } from "@/components/returns/download-slip-button"
 
 interface ReturnDetailsProps {
   returnData: any
@@ -38,10 +39,20 @@ const statusLabels: Record<string, string> = {
 export function ReturnDetails({ returnData, onBack }: ReturnDetailsProps) {
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={onBack} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Search
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Search
+        </Button>
+        {returnData.qr_token && (
+          <DownloadSlipButton
+            returnData={returnData}
+            variant="outline"
+            size="sm"
+            className="border-black text-black hover:bg-gray-100"
+          />
+        )}
+      </div>
 
       {/* Status Overview */}
       <Card>

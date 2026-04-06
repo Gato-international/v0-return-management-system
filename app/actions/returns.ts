@@ -98,6 +98,32 @@ export async function submitReturnAction(data: SubmitReturnData) {
       }
     }
 
+    // Fetch items back for the success response
+    const { data: createdItems } = await supabase
+      .from("return_items")
+      .select("*")
+      .eq("return_id", returnRecord.id)
+
+    // Enrich items with variation data
+    const enrichedItems = createdItems || []
+    if (enrichedItems.length > 0) {
+      const variationIds = enrichedItems.map((item) => item.product_variation_id).filter(Boolean)
+      if (variationIds.length > 0) {
+        const { data: variations } = await supabase
+          .from("product_variations")
+          .select("id, sku, attributes, product:products(name)")
+          .in("id", variationIds)
+        if (variations) {
+          const variationsMap = new Map(variations.map((v) => [v.id, v]))
+          enrichedItems.forEach((item) => {
+            if (item.product_variation_id) {
+              ;(item as any).variation = variationsMap.get(item.product_variation_id)
+            }
+          })
+        }
+      }
+    }
+
     const formattedReturnNumber = formatReturnNumber(returnRecord.return_number)
     await sendReturnConfirmationEmail(data.customerEmail, formattedReturnNumber, data.orderNumber || "N/A")
 
@@ -111,7 +137,14 @@ export async function submitReturnAction(data: SubmitReturnData) {
 
     revalidatePath("/admin/dashboard")
 
-    return { success: true, returnNumber: formattedReturnNumber }
+    return {
+      success: true,
+      returnNumber: formattedReturnNumber,
+      returnData: {
+        ...returnRecord,
+        items: enrichedItems,
+      },
+    }
   } catch (error) {
     console.error("[v0] Error submitting return:", error)
     return { error: "Failed to submit return. Please try again." }
@@ -177,6 +210,7 @@ export async function trackReturnAction(returnNumber: string, email: string) {
         images: images || [],
       },
     }
+    // Note: qr_token is included automatically via ...returnRecord spread
   } catch (error) {
     console.error("[v0] Error tracking return:", error)
     return { error: "Failed to track return. Please try again." }

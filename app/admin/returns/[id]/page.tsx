@@ -14,6 +14,7 @@ import { DeleteReturnButton } from "@/components/admin/delete-return-button"
 import { PrintReturnButton } from "@/components/admin/print-return-button"
 import { formatReturnNumber } from "@/lib/utils/formatters"
 import { ResendNotificationButton } from "@/components/admin/resend-notification-button"
+import { DownloadQRButton, AdminDownloadSlipButton } from "@/components/admin/download-qr-button"
 
 interface PageProps {
   params: any // Using 'any' to resolve conflicting type information from the Next.js runtime.
@@ -265,7 +266,21 @@ export default async function ReturnDetailPage({ params }: PageProps) {
               <CardHeader>
                 <CardTitle>More Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
+                {returnData.qr_token && (
+                  <>
+                    <DownloadQRButton
+                      qrToken={returnData.qr_token}
+                      returnNumber={formatReturnNumber(returnData.return_number)}
+                    />
+                    <AdminDownloadSlipButton
+                      returnData={{
+                        ...returnData,
+                        items: items,
+                      }}
+                    />
+                  </>
+                )}
                 <ResendNotificationButton returnId={returnData.id} userId={user.id} />
                 <PrintReturnButton />
                 <DeleteReturnButton returnId={returnData.id} userId={user.id} />

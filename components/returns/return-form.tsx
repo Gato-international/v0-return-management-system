@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { submitReturnAction } from "@/app/actions/returns"
-import { CheckCircle, AlertCircle, Plus, X } from "lucide-react"
+import { CheckCircle, AlertCircle, Plus, X, FileDown } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { ImageUpload } from "@/components/returns/image-upload"
 import { Textarea } from "../ui/textarea"
+import { DownloadSlipButton } from "@/components/returns/download-slip-button"
 
 interface Variation {
   id: string
@@ -227,6 +228,7 @@ function ReturnItemCard({ index, availableProducts, control, setValue, register,
 export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [successReturnData, setSuccessReturnData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
 
@@ -300,7 +302,10 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       if (result.error) {
         setError(result.error)
       } else if (result.returnNumber) {
-        setSuccess(`Return submitted! Your tracking number is: ${result.returnNumber}`)
+        setSuccess(result.returnNumber)
+        if ((result as any).returnData) {
+          setSuccessReturnData((result as any).returnData)
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred.")
@@ -311,10 +316,85 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
 
   if (success) {
     return (
-      <Alert className="bg-green-50 border-green-200">
-        <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-800">{success}</AlertDescription>
-      </Alert>
+      <div className="space-y-6">
+        {/* Success header */}
+        <div className="text-center py-6">
+          <div className="mx-auto w-16 h-16 bg-black rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Return Submitted</h2>
+          <p className="text-muted-foreground mt-2">
+            Your return request has been received and is being reviewed.
+          </p>
+        </div>
+
+        {/* Return number card */}
+        <Card className="border-2 border-black">
+          <div className="p-6 text-center">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
+              Your Tracking Number
+            </p>
+            <p className="text-3xl font-bold tracking-wider">{success}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Save this number — you&apos;ll need it to track your return.
+            </p>
+          </div>
+        </Card>
+
+        {/* Download return slip */}
+        {successReturnData?.qr_token && (
+          <Card className="bg-gray-50 border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileDown className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base">Download Your Return Slip</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Print this PDF and place it inside your return package. It contains a
+                    QR code for our warehouse to process your return quickly.
+                  </p>
+                  <div className="mt-4">
+                    <DownloadSlipButton
+                      returnData={successReturnData}
+                      variant="default"
+                      size="lg"
+                      className="bg-black hover:bg-gray-800 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Instructions */}
+        <Card>
+          <div className="p-6 space-y-4">
+            <h3 className="font-semibold">What happens next?</h3>
+            <div className="space-y-3">
+              {[
+                { step: "1", text: "Download and print the return slip above." },
+                { step: "2", text: "Pack the items securely and place the slip inside the box." },
+                { step: "3", text: "Ship the package to the address in your confirmation email." },
+                { step: "4", text: "Track your return status using your tracking number and email." },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                    {item.step}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <p className="text-center text-sm text-muted-foreground">
+          A confirmation email has been sent to your email address.
+        </p>
+      </div>
     )
   }
 

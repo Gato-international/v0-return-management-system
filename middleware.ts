@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 // Maintenance mode toggle - set to true to enable
-const MAINTENANCE_MODE = true
+const MAINTENANCE_MODE = false
 
 // Paths that should still work during maintenance (API for mobile app, admin access)
 const BYPASS_PATHS = [
