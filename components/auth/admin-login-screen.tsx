@@ -4,7 +4,8 @@ import { useState } from "react"
 import { AuthFormSplitScreen, type AuthFormValues } from "@/components/ui/login"
 import { loginAction } from "@/app/actions/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Shield } from "lucide-react"
+import { AlertCircle } from "lucide-react"
+import Image from "next/image"
 
 export function AdminLoginScreen() {
   const [error, setError] = useState<string | null>(null)
@@ -39,10 +40,14 @@ export function AdminLoginScreen() {
 
       <AuthFormSplitScreen
         logo={
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Shield className="h-5 w-5 text-primary" />
-            </div>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/gato-logo.png"
+              alt="GATO International"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
             <div className="flex flex-col">
               <span className="text-xs font-medium tracking-widest text-muted-foreground">
                 GATO-INTERNATIONAL

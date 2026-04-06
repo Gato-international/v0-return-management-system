@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -112,9 +113,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
         )}>
           {!collapsed && (
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-black font-bold text-sm">
-                G
-              </div>
+              <Image
+                src="/gato-logo.png"
+                alt="GATO"
+                width={32}
+                height={32}
+                className="shrink-0 rounded-md"
+              />
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">GATO Returns</p>
                 <p className="text-[11px] text-white/50 truncate">Admin Portal</p>
@@ -122,9 +127,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             </div>
           )}
           {collapsed && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-black font-bold text-sm">
-              G
-            </div>
+            <Image
+              src="/gato-logo.png"
+              alt="GATO"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
           )}
           {/* Mobile close */}
           <button
