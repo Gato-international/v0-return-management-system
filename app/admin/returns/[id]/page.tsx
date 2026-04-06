@@ -3,7 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { logoutAction } from "@/app/actions/auth"
 import Link from "next/link"
 import { ArrowLeft, Package, Calendar, Mail, FileText, User, Phone } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -87,32 +86,27 @@ export default async function ReturnDetailPage({ params }: PageProps) {
   ])
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card print:hidden">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/admin/returns">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
+    <>
+      {/* Page header */}
+      <div className="border-b border-neutral-200 bg-white print:hidden">
+        <div className="px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/admin/returns" className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors flex items-center gap-1">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Returns
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Return #{formatReturnNumber(returnData.return_number)}</h1>
-              <p className="text-sm text-muted-foreground">Order: {returnData.order_number || "N/A"}</p>
-            </div>
           </div>
-          <form action={logoutAction}>
-            <Button variant="outline" type="submit">
-              Logout
-            </Button>
-          </form>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Return #{formatReturnNumber(returnData.return_number)}</h1>
+              <p className="text-sm text-neutral-500 mt-1">Order: {returnData.order_number || "N/A"}</p>
+            </div>
+            <Badge className={statusColors[returnData.status]}>{statusLabels[returnData.status]}</Badge>
+          </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 print:p-0">
+      <div className="px-6 lg:px-8 py-6 print:p-0">
         <div className="grid gap-6 lg:grid-cols-3 print:grid-cols-1">
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-6 print:col-span-1">
@@ -314,7 +308,7 @@ export default async function ReturnDetailPage({ params }: PageProps) {
             </Card>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   )
 }

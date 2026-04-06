@@ -36,24 +36,23 @@ export default async function EditProductPage({ params }: PageProps) {
   const productAttributes = allAttributes?.filter(attr => attributeIds.includes(attr.id)) || []
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/products">
-              <ArrowLeft className="h-4 w-4" />
+    <>
+      <div className="border-b border-neutral-200 bg-white">
+        <div className="px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/admin/products" className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors flex items-center gap-1">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Products
             </Link>
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">Edit Product</h1>
-            <p className="text-sm text-muted-foreground">
-              {product.name} (SKU: {product.sku})
-            </p>
           </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Edit Product</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            {product.name} (SKU: {product.sku})
+          </p>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-8 grid gap-8 md:grid-cols-3">
+      <div className="px-6 lg:px-8 py-6 grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1 space-y-8">
           <Card>
             <CardHeader>
@@ -95,7 +94,7 @@ export default async function EditProductPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   )
 }
