@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { OdooNoticePopup } from "@/components/admin/odoo-notice-popup"
 
 export default async function AdminLayout({
   children,
@@ -21,6 +22,7 @@ export default async function AdminLayout({
       <div className="lg:pl-[260px] transition-all duration-300">
         {children}
       </div>
+      <OdooNoticePopup />
     </div>
   )
 }
