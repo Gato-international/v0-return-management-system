@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+
+export const dynamic = "force-dynamic"
 import { ArrowLeft } from "lucide-react"
 import { VariationForm } from "@/components/admin/variation-form"
 import { VariationsTable } from "@/components/admin/variations-table"

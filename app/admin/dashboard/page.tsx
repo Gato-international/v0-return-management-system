@@ -1,11 +1,14 @@
 import { requireAuth } from "@/lib/auth"
 import { Card, CardContent } from "@/components/ui/card"
-import { Package, Clock, CheckCircle, XCircle, Box, Settings, Code2, FileText, Layers, Undo2, ArrowUpRight } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Box, Settings, Code2, FileText, Layers, Undo2, ArrowUpRight, ShieldCheck, Eye, CalendarDays, TrendingUp } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
+import { format, subDays, startOfDay } from "date-fns"
 import { formatReturnNumber } from "@/lib/utils/formatters"
+import { DashboardCharts } from "./dashboard-charts"
+
+export const dynamic = "force-dynamic"
 
 const statusColors: Record<string, string> = {
   pending: "bg-blue-500",
@@ -33,13 +36,76 @@ export default async function DashboardPage() {
   const user = await requireAuth()
   const supabase = createAdminClient()
 
-  const [totalReturns, pendingReturns, approvedReturns, rejectedReturns, { data: recentReturns }] = await Promise.all([
+  // Fetch basic stats + recent returns + analytics data in parallel
+  const thirtyDaysAgo = subDays(new Date(), 30).toISOString()
+
+  const [
+    totalReturns,
+    pendingReturns,
+    approvedReturns,
+    rejectedReturns,
+    { data: recentReturns },
+    { data: allReturns },
+    { data: returnItems },
+    { count: visionValidated },
+    { count: orderVerified },
+  ] = await Promise.all([
     supabase.from("returns").select("*", { count: "exact", head: true }),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "approved"),
     supabase.from("returns").select("*", { count: "exact", head: true }).eq("status", "rejected"),
     supabase.from("returns").select("id, return_number, customer_name, customer_email, status, created_at").order("created_at", { ascending: false }).limit(5),
+    supabase.from("returns").select("id, status, created_at, order_verified, vision_validated, shipping_date").gte("created_at", thirtyDaysAgo).order("created_at", { ascending: true }),
+    supabase.from("return_items").select("id, reason, product_name, return_id, created_at").gte("created_at", thirtyDaysAgo),
+    supabase.from("returns").select("*", { count: "exact", head: true }).eq("vision_validated", true),
+    supabase.from("returns").select("*", { count: "exact", head: true }).eq("order_verified", true),
   ])
+
+  // Build analytics data for charts
+  // 1. Returns over time (last 30 days, grouped by day)
+  const returnsOverTime: Record<string, number> = {}
+  const now = new Date()
+  for (let i = 29; i >= 0; i--) {
+    const d = subDays(now, i)
+    returnsOverTime[format(d, "MMM d")] = 0
+  }
+  (allReturns || []).forEach((r: any) => {
+    const day = format(new Date(r.created_at), "MMM d")
+    if (returnsOverTime[day] !== undefined) returnsOverTime[day]++
+  })
+  const returnsTimeData = Object.entries(returnsOverTime).map(([date, count]) => ({ date, count }))
+
+  // 2. Returns by reason (from items)
+  const reasonCounts: Record<string, number> = {}
+  ;(returnItems || []).forEach((item: any) => {
+    const reason = item.reason || "UNKNOWN"
+    reasonCounts[reason] = (reasonCounts[reason] || 0) + 1
+  })
+  const reasonData = Object.entries(reasonCounts).map(([reason, count]) => ({
+    name: reason.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+    value: count,
+  }))
+
+  // 3. Returns by status
+  const statusCounts: Record<string, number> = {}
+  ;(allReturns || []).forEach((r: any) => {
+    statusCounts[r.status] = (statusCounts[r.status] || 0) + 1
+  })
+  const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+    name: statusLabels[status] || status,
+    value: count,
+  }))
+
+  // 4. Top returned products
+  const productCounts: Record<string, number> = {}
+  ;(returnItems || []).forEach((item: any) => {
+    const name = item.product_name || "Unknown"
+    productCounts[name] = (productCounts[name] || 0) + 1
+  })
+  const productData = Object.entries(productCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, count]) => ({ name: name.length > 20 ? name.substring(0, 20) + "…" : name, count }))
 
   const stats = [
     {
@@ -70,6 +136,20 @@ export default async function DashboardPage() {
       icon: XCircle,
       description: "Declined",
       href: "/admin/returns?status=rejected",
+    },
+    {
+      label: "Vision Validated",
+      value: visionValidated || 0,
+      icon: Eye,
+      description: "Photos verified",
+      href: "/admin/returns",
+    },
+    {
+      label: "Order Verified",
+      value: orderVerified || 0,
+      icon: ShieldCheck,
+      description: "Matched to order",
+      href: "/admin/returns",
     },
   ]
 
@@ -102,7 +182,7 @@ export default async function DashboardPage() {
 
       <div className="px-6 lg:px-8 py-6 space-y-6">
         {/* Stats grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
             <Link key={stat.label} href={stat.href}>
               <Card className={`group relative overflow-hidden border-neutral-200 bg-white hover:border-neutral-300 transition-all hover:shadow-md cursor-pointer ${stat.highlight ? "ring-1 ring-blue-200" : ""}`}>
@@ -123,6 +203,14 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* Analytics Charts */}
+        <DashboardCharts
+          returnsTimeData={returnsTimeData}
+          reasonData={reasonData}
+          statusData={statusData}
+          productData={productData}
+        />
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Recent returns */}

@@ -13,14 +13,19 @@ const bannerSettingsSchema = z.object({
 })
 
 export async function getBannerSettings() {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase.from("notification_banner").select("*").single()
+  try {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase.from("notification_banner").select("*").single()
 
-  if (error && error.code !== "PGRST116") { // Ignore "query returned no rows"
-    console.error("Error fetching banner settings:", error)
-    return { error: "Failed to fetch settings." }
+    if (error && error.code !== "PGRST116") { // Ignore "query returned no rows"
+      console.error("Error fetching banner settings:", error)
+      return { error: "Failed to fetch settings." }
+    }
+    return { settings: data }
+  } catch (e) {
+    // Fail gracefully during build or when env vars are missing
+    return { settings: null }
   }
-  return { settings: data }
 }
 
 export async function updateBannerSettings(prevState: any, formData: FormData) {

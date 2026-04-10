@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useForm, useFieldArray, UseFormSetValue, UseFormRegister, FieldErrors, useWatch, Control } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Spinner } from "@/components/ui/spinner"
 import { submitReturnAction } from "@/app/actions/returns"
-import { CheckCircle, AlertCircle, Plus, X, FileDown } from "lucide-react"
+import { CheckCircle, AlertCircle, Plus, X, FileDown, Search, ShieldCheck, ShieldAlert, CalendarIcon, ChevronDown } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { ImageUpload } from "@/components/returns/image-upload"
 import { Textarea } from "../ui/textarea"
@@ -44,7 +44,8 @@ const baseReturnSchema = z.object({
   customerPhone: z.string().optional(),
   description: z.string().min(10, "Please provide at least 10 characters."),
   preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).min(1, "At least one product photo is required."),
+  shippingDate: z.string().optional(),
 })
 
 const returnSchemaForType = baseReturnSchema.extend({
@@ -52,6 +53,29 @@ const returnSchemaForType = baseReturnSchema.extend({
 })
 
 type ReturnFormData = z.infer<typeof returnSchemaForType>
+
+interface ImageValidation {
+  valid: boolean
+  isScreenshot: boolean
+  isProductPhoto: boolean
+  confidence: number
+  reasons: string[]
+}
+
+interface OrderVerifyMatch {
+  product: string
+  found: boolean
+  quantityMatch: boolean
+  orderQuantity: number
+  claimedQuantity: number
+}
+
+interface OrderVerifyResult {
+  verified: boolean
+  matches: OrderVerifyMatch[]
+  message: string
+  orderReference?: string
+}
 
 interface ReturnFormProps {
   availableProducts: Product[]
@@ -231,7 +255,15 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
   const [successReturnData, setSuccessReturnData] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
+  const [imageValidations, setImageValidations] = useState<Record<string, ImageValidation>>({})
 
+  // Order verification state
+  const [showOrderVerify, setShowOrderVerify] = useState(false)
+  const [orderNumber, setOrderNumber] = useState("")
+  const [orderEmail, setOrderEmail] = useState("")
+  const [orderVerifying, setOrderVerifying] = useState(false)
+  const [orderVerifyResult, setOrderVerifyResult] = useState<OrderVerifyResult | null>(null)
+  const [orderVerifyError, setOrderVerifyError] = useState<string | null>(null)
   const returnSchema = useMemo(() => {
     const itemSchemaWithRefine = returnItemSchema.superRefine((data, ctx) => {
       const product = availableProducts.find(p => p.id === data.selectedProduct)
@@ -260,10 +292,84 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     defaultValues: {
       items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" }],
       images: [],
+      shippingDate: "",
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" })
+
+  // Image validation handler
+  const handleImageValidation = useCallback((url: string, result: ImageValidation) => {
+    setImageValidations(prev => ({ ...prev, [url]: result }))
+  }, [])
+
+  // Handle image upload
+  const handleImageUpload = useCallback((url: string) => {
+    setImages(prev => {
+      const next = [...prev, url]
+      setValue("images", next)
+      return next
+    })
+  }, [setValue])
+
+  // Handle image remove
+  const handleImageRemove = useCallback((url: string) => {
+    setImages(prev => {
+      const next = prev.filter(i => i !== url)
+      setValue("images", next)
+      return next
+    })
+    setImageValidations(prev => {
+      const next = { ...prev }
+      delete next[url]
+      return next
+    })
+  }, [setValue])
+
+  // Order verification handler
+  const handleVerifyOrder = async () => {
+    if (!orderNumber.trim() || !orderEmail.trim()) {
+      setOrderVerifyError("Please enter both the order number and email address.")
+      return
+    }
+
+    setOrderVerifying(true)
+    setOrderVerifyError(null)
+    setOrderVerifyResult(null)
+
+    try {
+      // Build items from the form
+      const formItems = fields.map((_, index) => {
+        const product = availableProducts.find(p => p.id === document.querySelector<HTMLSelectElement>(`[name="items.${index}.selectedProduct"]`)?.value)
+        return {
+          productName: product?.name || "",
+          sku: product?.sku || "",
+          quantity: 1,
+        }
+      })
+
+      const res = await fetch("/api/v1/verify-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: orderNumber.trim(),
+          email: orderEmail.trim(),
+          items: formItems.length > 0 ? formItems : [{ productName: "check", quantity: 1 }],
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setOrderVerifyError(data.error || data.message || "Verification failed.")
+      } else {
+        setOrderVerifyResult(data)
+      }
+    } catch {
+      setOrderVerifyError("Failed to verify order. Please try again.")
+    } finally {
+      setOrderVerifying(false)
+    }
+  }
 
   const onSubmit = async (data: ReturnFormData) => {
     setIsLoading(true)
@@ -298,7 +404,17 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
         return
       }
 
-      const result = await submitReturnAction({ ...data, items: itemsWithDetails, images })
+      const result = await submitReturnAction({
+        ...data,
+        items: itemsWithDetails,
+        images,
+        shippingDate: data.shippingDate || undefined,
+        orderNumber: orderNumber || undefined,
+        orderVerified: orderVerifyResult?.verified || false,
+        orderVerificationResult: orderVerifyResult || undefined,
+        visionValidated: Object.values(imageValidations).every(v => v.valid),
+        visionResults: imageValidations,
+      })
       if (result.error) {
         setError(result.error)
       } else if (result.returnNumber) {
@@ -470,12 +586,150 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       </div>
 
       <div className="space-y-4" id="tour-image-upload">
-        <h3 className="text-lg font-semibold">Product Images (Optional)</h3>
+        <h3 className="text-lg font-semibold">Product Photos *</h3>
+        <p className="text-sm text-muted-foreground">
+          Upload clear photos of the product(s) you want to return. Photos are verified for authenticity.
+        </p>
         <ImageUpload
           images={images}
-          onUpload={(url) => setImages(prev => [...prev, url])}
-          onRemove={(url) => setImages(prev => prev.filter(i => i !== url))}
+          onUpload={handleImageUpload}
+          onRemove={handleImageRemove}
+          required={true}
+          validationResults={imageValidations}
+          onValidationComplete={handleImageValidation}
         />
+        {errors.images && <p className="text-sm text-destructive">{errors.images.message}</p>}
+      </div>
+
+      {/* Shipping Date */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Shipping Date</h3>
+        <div className="space-y-2">
+          <Label htmlFor="shippingDate">When do you plan to ship the return package?</Label>
+          <div className="relative">
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="shippingDate"
+              type="date"
+              className="pl-10"
+              min={new Date().toISOString().split("T")[0]}
+              {...register("shippingDate")}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Optional — helps us prepare for your return and speeds up processing.
+          </p>
+        </div>
+      </div>
+
+      {/* Order Verification (Advanced) */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm font-medium text-neutral-600 hover:text-black transition-colors"
+          onClick={() => setShowOrderVerify(!showOrderVerify)}
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${showOrderVerify ? "rotate-180" : ""}`} />
+          Advanced: Verify your order (optional)
+        </button>
+
+        {showOrderVerify && (
+          <Card className="p-4 space-y-4 border-dashed">
+            <div className="flex items-start gap-3">
+              <Search className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium">Order Verification</p>
+                <p className="text-sm text-muted-foreground">
+                  Enter your order number and email to verify that your return items match the original order.
+                  This speeds up the review process.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="orderNumber">Order Number</Label>
+                <Input
+                  id="orderNumber"
+                  placeholder="e.g. ABCDEFGH"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="orderEmail">Order Email</Label>
+                <Input
+                  id="orderEmail"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={orderEmail}
+                  onChange={(e) => setOrderEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleVerifyOrder}
+              disabled={orderVerifying || !orderNumber.trim() || !orderEmail.trim()}
+            >
+              {orderVerifying ? (
+                <>
+                  <Spinner className="mr-2 h-3.5 w-3.5" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-3.5 w-3.5" />
+                  Verify Order
+                </>
+              )}
+            </Button>
+
+            {orderVerifyError && (
+              <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertDescription>{orderVerifyError}</AlertDescription>
+              </Alert>
+            )}
+
+            {orderVerifyResult && (
+              <div className={`rounded-lg border p-4 ${orderVerifyResult.verified ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+                <div className="flex items-start gap-3">
+                  {orderVerifyResult.verified ? (
+                    <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <ShieldAlert className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      {orderVerifyResult.verified ? "Order verified" : "Verification incomplete"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{orderVerifyResult.message}</p>
+                    {orderVerifyResult.matches && orderVerifyResult.matches.length > 0 && (
+                      <div className="space-y-1 mt-2">
+                        {orderVerifyResult.matches.map((m, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs">
+                            {m.found ? (
+                              <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                            ) : (
+                              <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                            )}
+                            <span className={m.found ? "text-green-800" : "text-red-700"}>
+                              {m.product} — {m.found ? (m.quantityMatch ? "Matches" : `Qty exceeds order (${m.claimedQuantity}/${m.orderQuantity})`) : "Not found in order"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
 
       <Button type="submit" className="w-full" size="lg" disabled={isLoading} id="tour-submit-button">

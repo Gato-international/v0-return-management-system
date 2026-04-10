@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { Card, CardContent } from "@/components/ui/card"
 import { ReturnsTable } from "@/components/admin/returns-table"
 
+export const dynamic = "force-dynamic"
+
 interface PageProps {
   searchParams: { status?: string }
 }

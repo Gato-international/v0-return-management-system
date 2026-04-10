@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+
+export const dynamic = "force-dynamic"
 import { ArrowLeft, Package, Calendar, Mail, FileText, User, Phone } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
