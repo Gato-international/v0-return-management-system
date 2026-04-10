@@ -62,19 +62,9 @@ interface ImageValidation {
   reasons: string[]
 }
 
-interface OrderVerifyMatch {
-  product: string
-  found: boolean
-  quantityMatch: boolean
-  orderQuantity: number
-  claimedQuantity: number
-}
-
 interface OrderVerifyResult {
   verified: boolean
-  matches: OrderVerifyMatch[]
   message: string
-  orderReference?: string
 }
 
 interface ReturnFormProps {
@@ -697,33 +687,17 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
 
             {orderVerifyResult && (
               <div className={`rounded-lg border p-4 ${orderVerifyResult.verified ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   {orderVerifyResult.verified ? (
-                    <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <ShieldCheck className="h-5 w-5 text-green-600 flex-shrink-0" />
                   ) : (
-                    <ShieldAlert className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0" />
                   )}
-                  <div className="space-y-2">
+                  <div>
                     <p className="text-sm font-medium">
-                      {orderVerifyResult.verified ? "Order verified" : "Verification incomplete"}
+                      {orderVerifyResult.verified ? "Order verified" : "Verification failed"}
                     </p>
                     <p className="text-sm text-muted-foreground">{orderVerifyResult.message}</p>
-                    {orderVerifyResult.matches && orderVerifyResult.matches.length > 0 && (
-                      <div className="space-y-1 mt-2">
-                        {orderVerifyResult.matches.map((m, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            {m.found ? (
-                              <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                            ) : (
-                              <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-                            )}
-                            <span className={m.found ? "text-green-800" : "text-red-700"}>
-                              {m.product} — {m.found ? (m.quantityMatch ? "Matches" : `Qty exceeds order (${m.claimedQuantity}/${m.orderQuantity})`) : "Not found in order"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
