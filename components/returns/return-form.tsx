@@ -44,7 +44,7 @@ const baseReturnSchema = z.object({
   customerPhone: z.string().optional(),
   description: z.string().min(10, "Please provide at least 10 characters."),
   preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  images: z.array(z.string()).min(1, "At least one product photo is required."),
+  images: z.array(z.string()).optional().default([]),
   shippingDate: z.string().optional(),
 })
 
@@ -576,15 +576,15 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
       </div>
 
       <div className="space-y-4" id="tour-image-upload">
-        <h3 className="text-lg font-semibold">Product Photos *</h3>
+        <h3 className="text-lg font-semibold">Product Photos</h3>
         <p className="text-sm text-muted-foreground">
-          Upload clear photos of the product(s) you want to return. Photos are verified for authenticity.
+          Optionally upload clear photos of the product(s) you want to return. Photos are verified for authenticity.
         </p>
         <ImageUpload
           images={images}
           onUpload={handleImageUpload}
           onRemove={handleImageRemove}
-          required={true}
+          required={false}
           validationResults={imageValidations}
           onValidationComplete={handleImageValidation}
         />
