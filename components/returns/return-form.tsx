@@ -44,7 +44,7 @@ const baseReturnSchema = z.object({
   customerPhone: z.string().optional(),
   description: z.string().min(10, "Please provide at least 10 characters."),
   preferredResolution: z.enum(["REFUND", "EXCHANGE", "STORE_CREDIT"]),
-  images: z.array(z.string()).optional().default([]),
+  images: z.array(z.string()).default([]),
   shippingDate: z.string().optional(),
 })
 
@@ -278,7 +278,7 @@ export function ReturnForm({ availableProducts }: ReturnFormProps) {
     control,
     setValue,
   } = useForm<ReturnFormData>({
-    resolver: zodResolver(returnSchema),
+    resolver: zodResolver(returnSchema) as any,
     defaultValues: {
       items: [{ productVariationId: "", quantity: 1, reason: "DEFECTIVE", selectedProduct: "" }],
       images: [],
