@@ -48,11 +48,6 @@ export async function submitReturnAction(data: SubmitReturnData) {
         description: data.description,
         preferred_resolution: data.preferredResolution,
         status: "pending",
-        shipping_date: data.shippingDate || null,
-        order_verified: data.orderVerified || false,
-        order_verification_result: data.orderVerificationResult || null,
-        vision_validated: data.visionValidated || false,
-        vision_validation_results: data.visionResults || null,
       })
       .select()
       .single()
